@@ -3,6 +3,7 @@ import os
 import platform
 import glob
 import json
+import urllib2
 
 from agentplugin import AgentPlugin
 from patching.data.application import AppUtils
@@ -658,32 +659,6 @@ class PatchingPlugin(AgentPlugin):
 
         return apps
 
-    def refresh_apps(self):
-        applications = self.get_installed_and_available_applications()
-
-        data = []
-        for app in applications:
-            data.append(app.to_dict())
-
-        agent_app = self.get_agent_app()
-        if agent_app:
-            data.append(agent_app.to_dict())
-
-        return data
-
-    def refresh_apps_operation(self, operation):
-        raw = {}
-
-        # TODO: don't hardcode
-        if not operation.id.endswith('-agent'):
-            raw[OperationKey.OperationId] = operation.id
-
-        raw[OperationKey.Data] = self.refresh_apps()
-
-        operation.raw_result = json.dumps(raw)
-
-        self._send_results(operation)
-
     def get_agent_app(self):
         try:
             agent_app = AppUtils.create_app(
@@ -712,6 +687,94 @@ class PatchingPlugin(AgentPlugin):
             logger.exception(e)
 
             return {}
+
+    def check_available_agent_update(self):
+        agent_update = None
+
+        # TODO: don't hardcode
+        releases_api = \
+            'https://api.github.com/repos/toppatch/vFenseAgent-nix/releases'
+
+        try:
+            response = urllib2.urlopen(releases_api)
+            releases = json.loads(response.read())
+
+            # Gets replaced in for loop if newer version is found
+            current_version = [int(x) for x in
+                               settings.AgentVersion.split('.')]
+
+            for release in releases:
+
+                try:
+                    # [1:] to avoid the v in tag name. (Ex: v0.7.0)
+                    release_version = [int(x) for x in
+                                       release['tag_name'][1:].split('.')]
+                except Exception as e:
+                    logger.error(
+                        "Failed to convert tag_name to an integer list."
+                    )
+                    logger.exception(e)
+
+                if current_version < release_version:
+                    # To keep looping and getting the highest version
+                    current_version = release_version
+
+                    # TODO: get the file url
+
+                    agent_update = AppUtils.create_app(
+                        settings.AgentName,
+                        '.'.join([str(x) for x in release_version]),
+                        settings.AgentDescription,  # description
+                        [],  # file_data
+                        [],  # dependencies
+                        '',  # support_url
+                        '',  # vendor_severity
+                        '',  # file_size
+                        '',  # vendor_id,
+                        '',  # vendor_name
+                        '',  # install_date
+                        None,  # release_date
+                        False,  # installed
+                        "",  # repo
+                        "no",  # reboot_required
+                        "no"  # uninstallable
+                    )
+
+        except Exception as e:
+            logger.error("Could not check for available agent update.")
+            logger.exception(e)
+
+        return agent_update
+
+    def refresh_apps(self):
+        applications = self.get_installed_and_available_applications()
+
+        data = []
+        for app in applications:
+            data.append(app.to_dict())
+
+        agent_app = self.get_agent_app()
+        if agent_app:
+            data.append(agent_app.to_dict())
+
+        agent_update = self.check_available_agent_update()
+        if agent_update:
+            data.append(agent_update.to_dict())
+
+        return data
+
+    def refresh_apps_operation(self, operation):
+        raw = {}
+
+        # TODO: don't hardcode
+        if not operation.id.endswith('-agent'):
+            raw[OperationKey.OperationId] = operation.id
+
+        raw[OperationKey.Data] = self.refresh_apps()
+
+        operation.raw_result = json.dumps(raw)
+
+        self._send_results(operation)
 
     def get_installed_and_available_applications(self):
         """
