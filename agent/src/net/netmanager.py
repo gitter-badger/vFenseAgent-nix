@@ -23,8 +23,8 @@ class NetManager():
 
         """
 
-        self._server_url = 'https://{0}/'.format(
-            settings.ServerAddress
+        self._server_url = 'https://{0}:{1}/'.format(
+            settings.ServerAddress, settings.ServerPort
         )
 
         self._timer = RepeatTimer(seconds_to_checkin, self._agent_checkin)
