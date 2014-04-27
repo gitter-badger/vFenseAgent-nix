@@ -52,7 +52,7 @@ operation_queue_file = os.path.join(EtcDirectory, '.oqd')
 result_queue_file = os.path.join(EtcDirectory, '.rqd')
 reboot_file = os.path.join(EtcDirectory, '.reboot')
 shutdown_file = os.path.join(EtcDirectory, '.shutdown')
-uptime_file = os.path.join(settings.EtcDirectory, '.last_uptime')
+uptime_file = os.path.join(EtcDirectory, '.last_uptime')
 update_file = os.path.join(EtcDirectory, '.agent_update')
 
 ServerAddress = None
