@@ -13,14 +13,13 @@ allow_checkin = True
 
 
 class NetManager():
+    """Used to talk to the server."""
 
     def __init__(self, seconds_to_checkin=60):
         """
-
         Args:
             seconds_to_checkin (int): Defines the interval, in seconds, to
             check-in to the server. Defaults to 60 seconds.
-
         """
 
         self._server_url = 'https://{0}:{1}/'.format(
@@ -72,6 +71,16 @@ class NetManager():
             logger.info("Checkin set to false.")
 
     def _get_request_method(self, req_method):
+        """Use to get the appropriate request method to talk to the server.
+
+        Args:
+            (str) req_method: The request method that is wanted
+                (Ex: POST, PUT, GET)
+
+        Returns:
+            (method) The corresponding requests method that matches what was
+            passed in arguments.
+        """
         if req_method == RequestMethod.POST:
             return self.http_session.post
         if req_method == RequestMethod.PUT:
@@ -80,6 +89,8 @@ class NetManager():
             return self.http_session.get
 
     def login(self):
+        """Logs in to the vFense server with the required credentials using
+        a requests session which stores all cookies."""
 
         try:
             url = os.path.join(
