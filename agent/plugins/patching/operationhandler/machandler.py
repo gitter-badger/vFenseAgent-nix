@@ -184,7 +184,7 @@ class MacOpHandler():
                                 '',  # file_size
                                 # vendor_id
                                 AppUtils.generate_app_id(
-                                    app_name.encode('utf-8') + app_version
+                                    app_name.encode('utf-8'), app_version
                                 ),
                                 'Apple',  # vendor_name
                                 app_date,  # install_date
