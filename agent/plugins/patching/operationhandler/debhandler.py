@@ -7,8 +7,8 @@ import hashlib
 from src.utils import settings, logger, utilcmds, updater
 from datetime import datetime
 from patching.data.application import AppUtils
-from patching.patchingsofoperation import PatchingError, InstallResult, UninstallResult, \
-    CpuPriority
+from patching.patchingsofoperation import PatchingError, InstallResult, \
+    UninstallResult, CpuPriority
 
 
 class FileDataKeys():

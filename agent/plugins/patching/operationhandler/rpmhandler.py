@@ -1,14 +1,13 @@
 import os
 import re
 import glob
-import hashlib
-import subprocess
 
 from serveroperation.sofoperation import *
-from src.utils import logger, updater, utilcmds
+from src.utils import logger, settings, updater, utilcmds
 
 from patching.data.application import AppUtils
-from patching.patchingsofoperation import InstallResult, UninstallResult, PatchingOperationKey
+from patching.patchingsofoperation import InstallResult, UninstallResult, \
+    PatchingOperationKey, CpuPriority
 from patching.distro.redhat import yum
 from patching.distro.redhat.yum.repos import RepoData, get_primary_file
 
@@ -581,16 +580,7 @@ class RpmOpHandler():
 
         try:
 
-            process = subprocess.Popen(
-                ['rpm', '-qa'], stdout=subprocess.PIPE, stderr=subprocess.PIPE
-            )
-
-            output, _stderr = process.communicate()
-            output = (
-                output
-                .decode(settings.default_decoder)
-                .encode(settings.default_encoder)
-            )
+            output, _ = self.utilcmds.run_command(['rpm', '-qa'])
 
             installed_list = output.splitlines()
 
@@ -601,15 +591,7 @@ class RpmOpHandler():
                     rpm_query = \
                         ['rpm', '-q', app, '--queryformat', query_format]
 
-                    process = subprocess.Popen(
-                        rpm_query, stdout=subprocess.PIPE
-                    )
-                    output, _stderr = process.communicate()
-                    output = (
-                        output
-                        .decode(settings.default_decoder)
-                        .encode(settings.default_encoder)
-                    )
+                    output, _ = self.utilcmds.run_command(rpm_query)
 
                     app_info = output.split(query_separator)
 

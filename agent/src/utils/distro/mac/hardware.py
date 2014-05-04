@@ -1,10 +1,7 @@
-import subprocess
-import os
 import threading
 import time
 
-from src.utils import settings
-from src.utils import logger
+from src.utils import settings, logger, utilcmds
 from src.utils.distro.mac import plist
 
 class MacHardware():
@@ -31,6 +28,7 @@ class MacHardware():
         # if os.path.exists(self.hardware_file_path):
         #     os.remove(self.hardware_file_path)
         self.plist = plist.PlistInterface()
+        self.utilcmds = utilcmds.UtilCmds()
 
     def timeout_process(self, data_type):
         """Timeout protection on running system_profiler.
@@ -83,12 +81,7 @@ class MacHardware():
         try:
 
             cmd = ['/usr/sbin/system_profiler', '-xml', data_type]
-            self.process = subprocess.Popen(
-                cmd,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE
-            )
-            self.output, _err = self.process.communicate()
+            self.output, _err = self.utilcmds.run_command(cmd)
 
         except Exception as e:
 
@@ -143,6 +136,18 @@ class MacHardware():
     #         elif entry['_dataType'] == 'SPParallelSCSIDataType':
     #             self.hardware['scsi'] = entry
 
+    def _get_bit_type(self):
+        bit_type = settings.EmptyValue
+
+        output, _ = self.utilcmds.run_command(['uname', '-m'])
+
+        if 'x86_64' in output:
+            bit_type = '64'
+        elif 'i386' in output:
+            bit_type = '32'
+
+        return bit_type
+
     def _get_cpu_specs(self):
 
         cpu_list = []
@@ -195,7 +200,7 @@ class MacHardware():
                             cache_kb = cache_digit
 
                     cpu_dict['cache_kb'] = str(cache_kb)
-                    cpu_dict['bit_type'] = settings.EmptyValue
+                    cpu_dict['bit_type'] = self._get_bit_type()
 
                     # TODO: Never tested with multiple CPUs. Setting to '1'
                     # Huh?!
@@ -336,8 +341,7 @@ class MacHardware():
 
         try:
 
-            process = subprocess.Popen(['mount'], stdout=subprocess.PIPE)
-            output, _error = process.communicate()
+            output, _error = self.utilcmds.run_command(['mount'])
 
             for line in output.splitlines():
 
@@ -367,8 +371,7 @@ class MacHardware():
 
         outlines = []
 
-        process = subprocess.Popen(['df', '-kl'], stdout=subprocess.PIPE)
-        output, _error = process.communicate()
+        output, _ = self.utilcmds.run_command(['df', '-kl'])
 
         # Nifty way to remove all the spaces in the output.
         for line in output.splitlines():

@@ -474,7 +474,9 @@ class MacOpHandler():
         if pkgs:
             # TODO: what to do with multiple pkgs?
             for pkg in pkgs:
-                success, error = self.pkg_installer.installer(pkg)
+                success, error = self.pkg_installer.installer(
+                    pkg, proc_niceness
+                )
 
         return success, error
 
@@ -705,7 +707,9 @@ class MacOpHandler():
             )
 
             if pkgs:
-                success, error = self._install_third_party_pkg(pkgs)
+                success, error = self._install_third_party_pkg(
+                    pkgs, install_data.proc_niceness
+                )
 
                 if success == 'true':
                     #app_encoding = self._get_app_encoding(install_data.name)
