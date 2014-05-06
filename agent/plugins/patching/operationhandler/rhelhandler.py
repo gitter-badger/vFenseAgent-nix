@@ -5,11 +5,8 @@
 #import json
 ##########################################
 
-import os
 import re
 import time
-import hashlib
-import subprocess
 
 from src.utils import logger, settings, utilcmds
 
@@ -367,7 +364,9 @@ class RhelOpHandler(RpmOpHandler):
 
         old_install_list = self.get_installed_applications()
 
-        success, error, restart = self._yum_update(install_data.name)
+        success, error, restart = self._yum_update(
+            install_data.name, install_data.proc_niceness
+        )
 
         if success == 'true':
 

@@ -387,16 +387,17 @@ def printErrors(errors):
     sys.exit(1)
 
 
-def verify_credentials(username, password, server_address):
+def verify_credentials(username, password, server_address, server_port):
     """
     Returns message corresponding to error code, if any. If an unknown error
     occured, it will pass the exception. Returns empty string on a 200.
     """
-    url = "https://%s/rvl/login" % server_address
+    url = "https://%s:%s/rvl/login" % (server_address, server_port)
 
-    data = {}
-    data['name'] = username
-    data['password'] = password
+    data = {
+        'name': username,
+        'password': password
+    }
 
     data_json = dict_to_json(data)
 
@@ -463,7 +464,9 @@ def check_user_input(args):
     else:
         server_address = args.serveripaddress
 
-    cred_err = verify_credentials(args.username, args.password, server_address)
+    cred_err = verify_credentials(
+        args.username, args.password, server_address, args.serverport
+    )
 
     # Terminate on invalid credentials
     if cred_err:

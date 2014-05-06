@@ -380,7 +380,7 @@ class PatchingPlugin(AgentPlugin):
             self._restart_if_needed(operation.restart, restart_needed)
         except AttributeError:
             logger.error(
-                "Failed to check if restart was needed due to no"
+                "Failed to check if restart was needed due to no "
                 "restart attribute in operation."
             )
 

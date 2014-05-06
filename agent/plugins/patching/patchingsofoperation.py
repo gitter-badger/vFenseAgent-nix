@@ -140,17 +140,15 @@ class PatchingSofOperation(SofOperation):
     def __init__(self, message=None):
         super(PatchingSofOperation, self).__init__(message)
 
-        # TODO: Fix hack. Lazy to use patchingplugin module because of circular deps.
+        # TODO: Fix hack. Lazy to use patchingplugin module because of
+        # circular deps.
         # TODO: switch to patching
         self.plugin = 'rv'
 
         self.applications = []
 
-        if self.json_message:
-            self.cpu_priority = self._get_cpu_priority()
-            self.net_throttle = self.json_message.get(
-                PatchingOperationKey.NetThrottle, 0
-            )
+        self.cpu_priority = self._get_cpu_priority()
+        self.net_throttle = self._get_net_throttle()
 
         if self.type in PatchingOperationValue.InstallOperations:
             self.install_data_list = self._load_install_data()
@@ -167,9 +165,20 @@ class PatchingSofOperation(SofOperation):
             self.package_urn = self.json_message[PatchingOperationKey.Uris]
 
     def _get_cpu_priority(self):
-        return self.json_message.get(
-            PatchingOperationKey.CpuThrottle, CpuPriority.Normal
-        )
+        if self.json_message:
+            return self.json_message.get(
+                PatchingOperationKey.CpuThrottle, CpuPriority.Normal
+            )
+
+        return CpuPriority.Normal
+
+    def _get_net_throttle(self):
+        if self.json_message:
+            return self.json_message.get(
+                PatchingOperationKey.NetThrottle, 0
+            )
+
+        return 0
 
     def _load_install_data(self):
         """Parses the 'data' key to get the application info for install.

@@ -13,46 +13,48 @@ allow_checkin = True
 
 
 class NetManager():
+    """Used to talk to the server."""
 
     def __init__(self, seconds_to_checkin=60):
         """
-
         Args:
-
-            - seconds_to_checkin: Time, in seconds, to check into the server
-                and it defaults to 1 minute.
-
-        Return:
-
-            - Nothing
-
+            seconds_to_checkin (int): Defines the interval, in seconds, to
+            check-in to the server. Defaults to 60 seconds.
         """
 
-        self._server_url = 'https://{0}/'.format(
-            settings.ServerAddress
+        self._server_url = 'https://{0}:{1}/'.format(
+            settings.ServerAddress, settings.ServerPort
         )
 
         self._timer = RepeatTimer(seconds_to_checkin, self._agent_checkin)
 
-    def incoming_callback(self, callback):
+    def start(self):
+        """Starts the repeating timer that checks-in to the server at
+        set intervals.
         """
-        Sets the callback to be used when operations were received during
+        self._timer.start()
+
+    def incoming_callback(self, callback):
+        """Sets the callback to be used when operations were received during
         agent check-in.
-        @param callback: The operation callback.
-        @return: Nothing
+
+        Args:
+            callback (function): The function which will be called back on
+                server response. This function must accept one dictionary
+                argument.
+
         """
         self._incoming_callback = callback
 
     def _agent_checkin(self):
-        """
-        Checks in to the server to retrieve all pending operations.
-        @return: Nothing
-        """
+        """Checks in to the server to retrieve all pending operations."""
+
         if allow_checkin:
-            root = {}
-            root[OperationKey.Operation] = OperationValue.CheckIn
-            root[OperationKey.OperationId] = ''
-            root[OperationKey.AgentId] = settings.AgentId
+            root = {
+                OperationKey.Operation: OperationValue.CheckIn,
+                OperationKey.OperationId: '',
+                OperationKey.AgentId: settings.AgentId
+            }
 
             success = self.send_message(
                 json.dumps(root),
@@ -68,15 +70,27 @@ class NetManager():
         else:
             logger.info("Checkin set to false.")
 
-    def start(self):
+    def _get_request_method(self, req_method):
+        """Use to get the appropriate request method to talk to the server.
+
+        Args:
+            (str) req_method: The request method that is wanted
+                (Ex: POST, PUT, GET)
+
+        Returns:
+            (method) The corresponding requests method that matches what was
+            passed in arguments.
         """
-        Starts the repeating timer that checks-in to the server at
-        set intervals.
-        @return: Nothing
-        """
-        self._timer.start()
+        if req_method == RequestMethod.POST:
+            return self.http_session.post
+        if req_method == RequestMethod.PUT:
+            return self.http_session.put
+        if req_method == RequestMethod.GET:
+            return self.http_session.get
 
     def login(self):
+        """Logs in to the vFense server with the required credentials using
+        a requests session which stores all cookies."""
 
         try:
             url = os.path.join(
@@ -94,7 +108,9 @@ class NetManager():
                 'password': settings.Password
             }
 
-            response = self.http_session.post(
+            request_method = self._get_request_method(RequestMethod.POST)
+
+            response = request_method(
                 url,
                 data=json.dumps(payload),
                 headers=headers,
@@ -116,27 +132,18 @@ class NetManager():
 
         return False
 
-    def _get_request_method(self, req_method):
-        if req_method == RequestMethod.POST:
-            return self.http_session.post
-        if req_method == RequestMethod.PUT:
-            return self.http_session.put
-        if req_method == RequestMethod.GET:
-            return self.http_session.get
-
     def send_message(self, data, uri, req_method):
-        """Sends a message to the server and waits for data in return.
+        """Sends a message to the server and waits for data in return. If
+        successful data retrieval then it calls the callback method with
+        the data.
 
         Args:
-            - data: JSON formatted str to send the server.
-
-            - uri: RESTful uri to send the data.
-
-            - req_method: HTTP Request Method
+            data (str): JSON formatted str to send the server.
+            uri (str): RESTful uri to send the data.
+            req_method (str): HTTP Request Method
 
         Returns:
-
-            - True if message was sent successfully. False otherwise.
+            (bool) True if message was sent successfully, False otherwise.
 
         """
 
@@ -175,11 +182,9 @@ class NetManager():
 
             received_data = []
             try:
-
                 received_data = response.json()
 
             except Exception as e:
-
                 logger.error("Unable to read data from server. Invalid JSON?")
                 logger.exception(e)
 
