@@ -8,7 +8,8 @@ from serveroperation.sofoperation import *
 from utils import logger, updater, utilcmds
 
 from rv.data.application import CreateApplication
-from rv.rvsofoperation import InstallResult, UninstallResult, RvOperationKey
+from rv.rvsofoperation import InstallResult, UninstallResult, RvOperationKey, \
+    CpuPriority
 from rv.distro.redhat import yum
 from rv.distro.redhat.yum.repos import RepoData, get_primary_file
 
