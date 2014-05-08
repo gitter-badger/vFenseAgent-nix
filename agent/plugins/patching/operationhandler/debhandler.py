@@ -4,12 +4,13 @@ import urllib
 import shutil
 import hashlib
 
-from src.utils import settings, logger, utilcmds, updater
 from datetime import datetime
-from patching.data.application import AppUtils
-from patching.agent_update_retriever import AgentUpdateRetriever
-from patching.patchingsofoperation import PatchingError, InstallResult, \
-    UninstallResult, CpuPriority
+
+from src.utils import settings, logger, utilcmds, updater
+from plugins.patching.data.application import AppUtils
+from plugins.patching.agent_update_retriever import AgentUpdateRetriever
+from plugins.patching.patchingsofoperation import PatchingError, \
+    InstallResult, UninstallResult, CpuPriority
 
 
 class FileDataKeys():
@@ -521,6 +522,9 @@ class DebianHandler():
                     append_dict = dict(update_app.file_data[0])
                     app.file_data.append(append_dict)
 
+    def get_available_agent_update(self):
+        return AgentUpdateRetriever.get_available_agent_update('deb')
+
     def get_available_updates(self):
         """Get application instances of the packages in need of update.
         """
@@ -575,9 +579,6 @@ class DebianHandler():
     def get_installed_updates(self):
         """patchingplugin calls this function, but only meant for Mac."""
         return []
-
-    def get_available_agent_update(self):
-        return AgentUpdateRetriever.get_available_agent_update('deb')
 
     def _get_installed_app(self, name):
         installed_packages = self._get_installed_packages()

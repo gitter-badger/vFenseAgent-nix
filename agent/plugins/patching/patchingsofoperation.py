@@ -21,6 +21,7 @@ class PatchingOperationValue():
     UpdatesAvailable = 'updates_available'
     ApplicationsInstalled = 'applications_installed'
     RefreshApps = 'updatesapplications'
+    AvailableAgentUpdate = 'available_agent_update'
 
     # TODO: implement
     AgentLogRetrieval = 'agent_log_retrieval'

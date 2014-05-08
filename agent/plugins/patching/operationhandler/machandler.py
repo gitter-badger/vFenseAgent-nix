@@ -10,11 +10,13 @@ from src.utils import logger, settings, utilcmds, updater
 from src.utils.distro.mac.plist import PlistInterface
 from src.utils.misc.htmlstripper import BodyHTMLStripper
 
-from patching.patchingsofoperation import PatchingError, InstallResult, UninstallResult
-from patching.data.application import AppUtils
-from patching.distro.mac.thirdparty import ThirdPartyManager
-from patching.distro.mac import PkgInstaller, DmgInstaller, Uninstaller
-from patching.distro.mac.updatescatalog import UpdatesCatalog
+from plugins.patching.agent_update_retriever import AgentUpdateRetriever
+from plugins.patching.data.application import AppUtils
+from plugins.patching.distro.mac.thirdparty import ThirdPartyManager
+from plugins.patching.distro.mac import PkgInstaller, DmgInstaller, Uninstaller
+from plugins.patching.distro.mac.updatescatalog import UpdatesCatalog
+from plugins.patching.patchingsofoperation import PatchingError, \
+    InstallResult, UninstallResult
 
 
 class MacOpHandler():
@@ -301,6 +303,10 @@ class MacOpHandler():
                 logger.exception(e)
 
         return applications
+
+    def get_available_agent_update(self):
+        # Change dmg to mac
+        return AgentUpdateRetriever.get_available_agent_update('dmg')
 
     def get_available_updates(self):
         """

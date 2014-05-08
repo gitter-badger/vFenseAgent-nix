@@ -113,6 +113,8 @@ class PatchingPlugin(AgentPlugin):
                     self.installed_applications_operation,
                 PatchingOperationValue.RefreshApps:
                     self.refresh_apps_operation,
+                PatchingOperationValue.AvailableAgentUpdate:
+                    self.available_agent_update_operation,
                 PatchingOperationValue.AgentLogRetrieval:
                     self.retrieve_agent_log,
                 PatchingOperationValue.ExecuteCommand:
@@ -701,9 +703,7 @@ class PatchingPlugin(AgentPlugin):
         if agent_app:
             data.append(agent_app.to_dict())
 
-        agent_update = self._operation_handler.get_available_agent_update()
-        if agent_update:
-            data.append(agent_update.to_dict())
+        self.run_available_agent_update_operation()
 
         return data
 
@@ -720,6 +720,48 @@ class PatchingPlugin(AgentPlugin):
 
         self._send_results(operation)
 
+    def run_refresh_apps_operation(self):
+        """Creates and runs a refresh apps operation.
+
+        Returns:
+            Nothing
+
+        """
+
+        operation = PatchingSofOperation()
+        operation.type = PatchingOperationValue.RefreshApps
+
+        self._register_operation(operation)
+
+    def check_for_agent_update(self):
+        agent_update = self._operation_handler.get_available_agent_update()
+        if agent_update:
+            return agent_update.to_dict()
+
+        return {}
+
+    def available_agent_update_operation(self, operation):
+        raw = {}
+
+        # TODO: don't hardcode
+        if not operation.id.endswith('-agent'):
+            raw[OperationKey.OperationId] = operation.id
+
+        agent_update = self.check_for_agent_update()
+
+        if agent_update:
+            raw[OperationKey.Data] = agent_update
+
+            operation.raw_result = json.dumps(raw)
+
+            self._send_results(operation)
+
+    def run_available_agent_update_operation(self):
+        operation = PatchingSofOperation()
+        operation.type = PatchingOperationValue.AvailableAgentUpdate
+
+        self._register_operation(operation)
+
     def get_installed_and_available_applications(self):
         """
         Wrapper around the operation handler's call to get available
@@ -733,19 +775,6 @@ class PatchingPlugin(AgentPlugin):
         apps.extend(self._operation_handler.get_available_updates())
 
         return apps
-
-    def run_refresh_apps_operation(self):
-        """Creates and runs a refresh apps operation.
-
-        Returns:
-            Nothing
-
-        """
-
-        operation = PatchingSofOperation()
-        operation.type = PatchingOperationValue.RefreshApps
-
-        self._register_operation(operation)
 
     def retrieve_agent_log(self, operation):
         """
