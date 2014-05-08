@@ -7,6 +7,7 @@ import hashlib
 from src.utils import settings, logger, utilcmds, updater
 from datetime import datetime
 from patching.data.application import AppUtils
+from patching.agent_update_retriever import AgentUpdateRetriever
 from patching.patchingsofoperation import PatchingError, InstallResult, \
     UninstallResult, CpuPriority
 
@@ -574,6 +575,9 @@ class DebianHandler():
     def get_installed_updates(self):
         """patchingplugin calls this function, but only meant for Mac."""
         return []
+
+    def get_available_agent_update(self):
+        return AgentUpdateRetriever.get_available_agent_update('deb')
 
     def _get_installed_app(self, name):
         installed_packages = self._get_installed_packages()

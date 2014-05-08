@@ -146,7 +146,7 @@ class AppUtils():
 
         elif isinstance(date_obj, float):
             # Assume epoch integer has been given
-            return date_obj
+            return int(date_obj)
 
         elif isinstance(date_obj, int):
             # Assume epoch integer has been given
@@ -179,4 +179,4 @@ class AppUtils():
             except Exception:
                 pass
 
-        return 0.0
+        return 0
