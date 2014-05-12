@@ -8,7 +8,7 @@ from plugins.patching.data.application import AppUtils
 class AgentUpdateRetriever():
 
     @staticmethod
-    def _get_available_agent_file_data(github_release_assets, platform):
+    def _get_available_agent_file_data(github_release_assets, agent_platform):
         """Retrieves the file_uri information for the agent update. It gets
         the information from the assets of the release.
 
@@ -37,7 +37,7 @@ class AgentUpdateRetriever():
             if not name:
                 continue
 
-            if platform not in name:
+            if agent_platform not in name:
                 continue
 
             data_dict = {
@@ -52,7 +52,7 @@ class AgentUpdateRetriever():
         return []
 
     @staticmethod
-    def get_available_agent_update(platform, version_string):
+    def get_available_agent_update(version_string, agent_platform):
         agent_update = None
 
         # TODO: don't hardcode
@@ -63,7 +63,6 @@ class AgentUpdateRetriever():
             response = urllib2.urlopen(releases_api)
             releases = json.loads(response.read())
 
-            #version_string = settings.AgentVersion.split('-')[0]
             # Gets replaced in for loop if newer version is found
             current_version = [int(x) for x in version_string.split('.')]
 
@@ -88,7 +87,7 @@ class AgentUpdateRetriever():
 
                 update_file_data = \
                     AgentUpdateRetriever._get_available_agent_file_data(
-                        release.get('assets', []), platform
+                        release.get('assets', []), agent_platform
                     )
 
                 if not update_file_data:
@@ -111,7 +110,7 @@ class AgentUpdateRetriever():
                     agent_version = (
                         '.'.join([str(x) for x in release_version])
                         + '-'
-                        + platform
+                        + agent_platform
                     )
 
                     agent_update = AppUtils.create_app(
