@@ -80,7 +80,7 @@ def remove_pyc_files(root_dir):
             os.remove(os.path.join(root, filename))
 
 
-def modify_config_version(config_path, version):
+def modify_config_version(config_path, version, platform):
     f = open(config_path, 'r')
     try:
         file_content = f.read()
@@ -95,7 +95,9 @@ def modify_config_version(config_path, version):
             if re.match('^version =.*', line):
                 line_position = new_content.index(line)
 
-                new_content[line_position] = 'version = {0}'.format(version)
+                new_content[line_position] = 'version = {0}'.format(
+                    version + '-' + platform
+                )
 
         f.write('\n'.join(new_content))
 
@@ -178,7 +180,7 @@ def build(version, platform):
 
     print 'Setting agent version.'
     modify_config_version(
-        os.path.join(agent_dir_path, 'agent.config'), version
+        os.path.join(agent_dir_path, 'agent.config'), version, platform
     )
 
     print 'Creating final product.'

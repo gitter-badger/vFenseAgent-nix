@@ -522,9 +522,6 @@ class DebianHandler():
                     append_dict = dict(update_app.file_data[0])
                     app.file_data.append(append_dict)
 
-    def get_available_agent_update(self):
-        return AgentUpdateRetriever.get_available_agent_update('deb')
-
     def get_available_updates(self):
         """Get application instances of the packages in need of update.
         """

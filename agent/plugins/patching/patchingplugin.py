@@ -182,6 +182,8 @@ class PatchingPlugin(AgentPlugin):
 
             failed_to_download = True
 
+        # TODO: rework this, the server must take a failure of
+        # the operation as a whole.
         if not operation.install_data_list or failed_to_download:
             error = PatchingError.UpdatesNotFound
 
@@ -734,7 +736,9 @@ class PatchingPlugin(AgentPlugin):
         self._register_operation(operation)
 
     def check_for_agent_update(self):
-        agent_update = self._operation_handler.get_available_agent_update()
+        platform = settings.AgentVersion.split('-')[1]
+        agent_update = AgentUpdateRetriever.get_available_agent_update(platform)
+
         if agent_update:
             return agent_update.to_dict()
 

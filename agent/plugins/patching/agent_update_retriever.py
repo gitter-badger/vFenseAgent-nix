@@ -8,15 +8,12 @@ from plugins.patching.data.application import AppUtils
 class AgentUpdateRetriever():
 
     @staticmethod
-    def _get_available_agent_file_data(github_release_assets_dict,
-            release_date, platform):
-
+    def _get_available_agent_file_data(github_release_assets, platform):
         """Retrieves the file_uri information for the agent update. It gets
-        the information from the json response of github's release api.
+        the information from the assets of the release.
 
         Args:
-            github_release_json (dict): The response received from
-                github's release api.
+            github_release_assets (list): The list of assets for the release.
 
         Returns:
             (list): A list of dictionaries where each dictionary is data
@@ -34,7 +31,7 @@ class AgentUpdateRetriever():
                 ]
         """
 
-        for asset in github_release_assets_dict:
+        for asset in github_release_assets:
             name = asset.get('name')
 
             if not name:
@@ -55,7 +52,7 @@ class AgentUpdateRetriever():
         return []
 
     @staticmethod
-    def get_available_agent_update(platform):
+    def get_available_agent_update(platform, version_string):
         agent_update = None
 
         # TODO: don't hardcode
@@ -66,9 +63,9 @@ class AgentUpdateRetriever():
             response = urllib2.urlopen(releases_api)
             releases = json.loads(response.read())
 
+            #version_string = settings.AgentVersion.split('-')[0]
             # Gets replaced in for loop if newer version is found
-            current_version = [int(x) for x in
-                               settings.AgentVersion.split('.')]
+            current_version = [int(x) for x in version_string.split('.')]
 
             for release in releases:
 
@@ -91,13 +88,8 @@ class AgentUpdateRetriever():
 
                 update_file_data = \
                     AgentUpdateRetriever._get_available_agent_file_data(
-                        release.get('assets', []), release_date, platform
+                        release.get('assets', []), platform
                     )
-
-                file_size = reduce(
-                    lambda a, b: a+b,
-                    [file_data['file_size'] for file_data in update_file_data]
-                )
 
                 if not update_file_data:
                     logger.debug(
@@ -107,13 +99,24 @@ class AgentUpdateRetriever():
 
                     continue
 
+                file_size = reduce(
+                    lambda a, b: a+b,
+                    [file_data['file_size'] for file_data in update_file_data]
+                )
+
                 if current_version < release_version:
                     # To keep looping and getting the highest version
                     current_version = release_version
 
+                    agent_version = (
+                        '.'.join([str(x) for x in release_version])
+                        + '-'
+                        + platform
+                    )
+
                     agent_update = AppUtils.create_app(
                         settings.AgentName,
-                        '.'.join([str(x) for x in release_version]),
+                        agent_version,
                         settings.AgentDescription,  # description
                         update_file_data,  # file_data
                         [],  # dependencies

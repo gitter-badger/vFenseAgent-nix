@@ -304,10 +304,6 @@ class MacOpHandler():
 
         return applications
 
-    def get_available_agent_update(self):
-        # Change dmg to mac
-        return AgentUpdateRetriever.get_available_agent_update('dmg')
-
     def get_available_updates(self):
         """
         Uses the softwareupdate OS X app to see what updates are available.
