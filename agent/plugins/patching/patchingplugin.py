@@ -248,8 +248,6 @@ class PatchingPlugin(AgentPlugin):
 
     def _agent_update(self, operation, update_dir):
         install_method = self._get_install_method(operation.type)
-        # TODO(urgent): remove this, only for testing
-        #install_method = self._operation_handler.install_agent_update
 
         restart_needed = False
 
@@ -396,7 +394,12 @@ class PatchingPlugin(AgentPlugin):
 
         try:
 
+            logger.debug(
+                "Checking for update file: {0}".format(settings.update_file)
+            )
+
             if os.path.exists(settings.update_file):
+                logger.debug("Update file exists.")
                 with open(settings.update_file, 'r') as _file:
                     update_result = json.load(_file)
 
@@ -414,7 +417,7 @@ class PatchingPlugin(AgentPlugin):
                     success,  # success
                     'false',  # restart
                     error,  # error
-                    "{}"  # app json
+                    '{}'  # app json
                 )
 
                 logger.info(patchingsof_result.__dict__)
@@ -422,6 +425,9 @@ class PatchingPlugin(AgentPlugin):
                 self._send_results(patchingsof_result)
 
                 os.remove(settings.update_file)
+
+            else:
+                logger.debug("Did not find the agent update file.")
 
         except Exception as e:
             logger.error("Failure while sending agent update result.")

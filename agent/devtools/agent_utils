@@ -492,6 +492,28 @@ def install_dependencies(args, platform):
             raise Exception(err)
 
 
+def create_update_file(app_id, operation_id):
+    # TODO: Improve the message passing between old and new agent.
+    # Passing appid and operationid as arguments doesn't seem right.
+    write_update_log("%s , %s" % (app_id, operation_id))
+    if app_id and operation_id:
+        etc_path = os.path.join(AGENT_INSTALL_PATH, 'etc')
+        success = 'true'
+
+        write_update_log("etc_path: %s" % etc_path)
+
+        if not os.path.exists(etc_path):
+            os.makedirs(etc_path)
+
+        update_file = os.path.join(etc_path, UPDATE_FILE)
+
+        write_update_log("update_file: %s" % update_file)
+
+        write_operation_success(
+            app_id, operation_id, success, update_file
+        )
+
+
 class MacUtils:
     def __init__(self):
         self.system_daemon_path = '/Library/LaunchDaemons'
@@ -669,28 +691,10 @@ class MacUtils:
             create_symlink(MAC_PYTHON_EXE, PYTHON_BIN_EXE)
             write_update_log("Created symlink.")
 
+            create_update_file(args.appid, args.operationid)
+
             self._load_plist(self.system_plist)
             write_update_log("Loaded plist.")
-
-            # TODO: Improve the message passing between old and new agent.
-            # Passing appid and operationid as arguments doesn't seem right.
-            write_update_log("%s , %s" % (args.appid, args.operationid))
-            if args.appid and args.operationid:
-                etc_path = os.path.join(AGENT_INSTALL_PATH, 'etc')
-                success = 'true'
-
-                write_update_log("etc_path: %s" % etc_path)
-
-                if not os.path.exists(etc_path):
-                    os.makedirs(etc_path)
-
-                update_file = os.path.join(etc_path, UPDATE_FILE)
-
-                write_update_log("update_file: %s" % update_file)
-
-                write_operation_success(
-                    args.appid, args.operationid, success, update_file
-                )
 
             # Clean up
             delete_directory(AGENT_TMP_LOCATION)
@@ -959,30 +963,14 @@ class RpmUtils:
             write_update_log("Checking run levels.")
             self._rpm_check_run_levels()
 
+            create_update_file(args.appid, args.operationid)
+
             write_update_log("Attempting to start agent.")
             self._start_agent()
             self._check_for_running_agent()
             write_update_log("vFense Agent is running.")
 
-            # TODO: Improve the message passing between old and new agent.
-            # Passing appid and operationid as arguments doesn't seem right.
-            write_update_log("%s , %s" % (args.appid, args.operationid))
-            if args.appid and args.operationid:
-                etc_path = os.path.join(AGENT_INSTALL_PATH, 'etc')
-                success = 'true'
-
-                write_update_log("etc_path: %s" % etc_path)
-
-                if not os.path.exists(etc_path):
-                    os.makedirs(etc_path)
-
-                update_file = os.path.join(etc_path, UPDATE_FILE)
-
-                write_update_log("update_file: %s" % update_file)
-
-                write_operation_success(
-                    args.appid, args.operationid, success, update_file
-                )
+            create_update_file(args.appid, args.operationid)
 
             # Clean up tmp dir
             delete_directory(AGENT_TMP_LOCATION)
@@ -1223,30 +1211,12 @@ class DebUtils:
             self._deb_check_run_levels()
             write_update_log("Checked run levels.")
 
+            create_update_file(args.appid, args.operationid)
+
             write_update_log("Attempting to start agent.")
             self._start_agent()
             self._check_for_running_agent()
             write_update_log("vFense Agent is running.")
-
-            # TODO: Improve the message passing between old and new agent.
-            # Passing appid and operationid as arguments doesn't seem right.
-            write_update_log("%s , %s" % (args.appid, args.operationid))
-            if args.appid and args.operationid:
-                etc_path = os.path.join(AGENT_INSTALL_PATH, 'etc')
-                success = 'true'
-
-                write_update_log("etc_path: %s" % etc_path)
-
-                if not os.path.exists(etc_path):
-                    os.makedirs(etc_path)
-
-                update_file = os.path.join(etc_path, UPDATE_FILE)
-
-                write_update_log("update_file: %s" % update_file)
-
-                write_operation_success(
-                    args.appid, args.operationid, success, update_file
-                )
 
             # Clean up tmp dir
             delete_directory(AGENT_TMP_LOCATION)
