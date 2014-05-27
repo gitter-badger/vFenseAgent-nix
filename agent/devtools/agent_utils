@@ -1048,8 +1048,12 @@ class DebUtils:
 
     def _start_agent(self):
         cmd = [self.service, self.daemon_name, 'start']
-        with open(os.devnull, 'w') as dev_null:
+
+        dev_null = open(os.devnull, 'w')
+        try:
             subprocess.call(cmd, stdout=dev_null, stderr=dev_null)
+        finally:
+            dev_null.close()
 
     def _check_for_running_agent(self):
         cmd = [self.service, self.daemon_name, 'status']
