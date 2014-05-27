@@ -82,7 +82,7 @@ class AgentUpdateRetriever():
                     continue
 
                 release_date = datetime.strptime(
-                    release.get('published_at'), "%Y-%d-%mT%XZ"
+                    release.get('published_at'), "%Y-%m-%dT%XZ"
                 ).strftime(settings.DATE_FORMAT)
 
                 update_file_data = \
