@@ -415,7 +415,8 @@ class HarddriveInfo():
             self._hdd_list.append(tmp_dict.copy())
 
     def get_hdd_list(self):
-        return self._hdd_list
+        # return non-empty dictionaries
+        return [info_dict for info_dict in self._hdd_list if info_dict]
 
 
 class NicInfo():
