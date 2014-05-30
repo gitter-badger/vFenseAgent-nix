@@ -88,6 +88,11 @@ class NetManager():
         if req_method == RequestMethod.GET:
             return self.http_session.get
 
+        logger.debug(
+            "Could not get request method for: '{0}'".format(req_method)
+        )
+        return None
+
     def login(self):
         """Logs in to the vFense server with the required credentials using
         a requests session which stores all cookies."""

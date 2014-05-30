@@ -260,12 +260,12 @@ class PatchingSofOperation(SofOperation):
         if not super(PatchingSofOperation, self).is_savable():
             return False
 
-        non_savable = [PatchingOperationValue.RefreshApps]
+        non_savable = [
+            PatchingOperationValue.RefreshApps,
+            PatchingOperationValue.AvailableAgentUpdate
+        ]
 
-        if self.type in non_savable:
-            return False
-
-        return True
+        return not (self.type in non_savable)
 
 
 # Simple nametuple to contain install results.

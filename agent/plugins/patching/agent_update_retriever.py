@@ -24,7 +24,7 @@ class AgentUpdateRetriever():
                     {
                         'file_name': 'VFAgent_0_7_0-deb.tar.gz',
                         'file_uri': 'https://api.github.com/repos/toppatch/vFenseAgent-nix/releases/assets/91651',
-                        'file_hash': '', # Currently no way of getting the hash,
+                        'file_hash': '', # Currently no way of getting the hash
                         'file_size': 544460
                     },
                     ...

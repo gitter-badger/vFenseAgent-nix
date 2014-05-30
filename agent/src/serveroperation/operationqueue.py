@@ -23,8 +23,9 @@ class OperationQueue():
 
             return True
         except Exception as e:
-            logger.error("Failed to remove operation from queue: {0}"
-                         .format(operation))
+            logger.error(
+                "Failed to remove operation from queue: {0}".format(operation)
+            )
             logger.exception(e)
 
             return False
@@ -39,29 +40,51 @@ class OperationQueue():
 
         return self.put(operation)
 
-    def put(self, operation):
+    def _put_front(self, operation):
+        new_queue = Queue.Queue()
+        new_queue.put(operation)
+
+        for op in self.queue_dump():
+            new_queue.put(operation)
+
+        # +1 to take in to account the newest operation added to the front
+        new_queue.unfinished_tasks = self.queue.unfinished_tasks + 1
+
+        self.queue = new_queue
+
+    def put(self, operation, put_front=False):
         """
         Attempts to add an item to the queue.
-        @param operation: Item to be added.
-        @return: True if item was successfully added, false otherwise.
+
+        Args:
+            operation (SofOperation): Operation to be added.
+
+        Kwargs:
+            put_front (bool): Determines whether the operation be placed
+                in the front of the queue or in the back.
+
+        Returns:
+            True if item was successfully added, false otherwise.
         """
         result = False
 
         try:
-
             if operation:
+                if put_front:
+                    self._put_front(operation)
+                else:
+                    self.queue.put(operation)
 
-                self.queue.put(operation)
                 result = True
 
                 try:
                     logger.debug(
-                        "Added {0} / {1} to OpQueue."
+                        "Added ({0}, {1}) to queue."
                         .format(operation.type, operation.id)
                     )
                 except Exception:
                     logger.debug(
-                        "Added {0} to OpQueue."
+                        "Added {0} to queue."
                         .format(operation)
                     )
 
@@ -96,10 +119,12 @@ class OperationQueue():
 
                 try:
                     logger.debug(
-                        "Popping {0} from OpQueue.".format(operation.id)
+                        "Popping ({0}, {1}) from queue.".format(
+                            operation.id, operation.type
+                        )
                     )
                 except Exception:
-                    logger.debug("Popping {0} from OpQueue.".format(operation))
+                    logger.debug("Popping {0} from queue.".format(operation))
 
             except Queue.Empty as e:
 #                logger.debug("Operations queue is empty.")
@@ -119,11 +144,17 @@ class OperationQueue():
         """
 
         try:
+            logger.debug("Unfinished tasks before done: {0}".format(self.queue.unfinished_tasks))
             self.queue.task_done()
-            self.op_in_progress = False
+            logger.debug("Unfinished tasks after done: {0}".format(self.queue.unfinished_tasks))
+
         except Exception as e:
             logger.error("Error marking operation as done.")
-            logger.error("Message: %s" % e)
+            logger.exception(e)
+
+        finally:
+            # Mark as false to continue processing operations
+            self.op_in_progress = False
 
     def pause(self):
         self.paused = True

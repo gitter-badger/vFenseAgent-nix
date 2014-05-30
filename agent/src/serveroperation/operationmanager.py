@@ -24,17 +24,13 @@ class OperationManager():
         self._operation_queue = queuesave.load_operation_queue()
         self._result_queue = queuesave.load_result_queue()
 
-        self._operation_queue_thread = \
-            Thread(target=self._operation_queue_loop)
-        self._operation_queue_thread.daemon = True
-        self._operation_queue_thread.start()
-
-        self._result_queue_thread = Thread(target=self._result_queue_loop)
-        self._result_queue_thread.daemon = True
-        self._result_queue_thread.start()
+        # Determines whether the operations in the result queue
+        # will be processed. Set to True when the agent receives a
+        # reponse_uris operation.
+        self._process_results = False
 
         # Callback function for results set by core
-        self._send_results = None
+        self._send_results_callback = None
 
     def _load_plugin_handlers(self):
         for plugin in self._plugins.values():
@@ -61,7 +57,7 @@ class OperationManager():
 
             return False
 
-        result = self._send_results(
+        result = self._send_results_callback(
             operation_result,
             response_uri,
             request_method
@@ -75,22 +71,33 @@ class OperationManager():
 
         return result
 
-    def register_plugin_operation(self, message):
+    def start(self):
+        self._operation_queue_thread = \
+            Thread(target=self._operation_queue_loop)
+        self._operation_queue_thread.daemon = True
+
+        self._result_queue_thread = Thread(target=self._result_queue_loop)
+        self._result_queue_thread.daemon = True
+
+        self.initial_data_sender()
+
+        logger.debug("Starting the queue processing loops.")
+        self._operation_queue_thread.start()
+        self._result_queue_thread.start()
+
+    def register_plugin_operation(self, operation, put_front=False):
         """ Provides a way for plugins to store their custom made
         operations with the agent core.
 
         Args:
-
-            - message: Operation as a JSON formatted string.
+            operation (SofOperation): An operation that must be a 
+                SofOperation instance (polymorphic).
 
         Returns:
-
-            - True if operation was added successfully. False otherwise.
+            (bool) True if operation was added successfully. False otherwise.
         """
 
-        self.add_to_operation_queue(message)
-
-        return True
+        return self.add_to_operation_queue(operation, put_front)
 
     def _major_failure(self, operation, exception):
 
@@ -141,7 +148,7 @@ class OperationManager():
                 OperationValue.NewAgentId: self.new_agent_id_op,
                 OperationValue.Reboot: self.reboot_op,
                 OperationValue.Shutdown: self.shutdown_op,
-                OperationValue.RefreshResponseUris: self.refresh_response_uris,
+                OperationValue.RefreshResponseUris: self.refresh_response_uris
             }
 
             if operation.type in operation_methods:
@@ -169,7 +176,7 @@ class OperationManager():
     ###########################################################################
 
     def system_info_op(self, operation):
-        self.add_to_result_queue(self.system_info(operation))
+        self.add_to_result_queue(self.system_info())
 
     def new_agent_op(self, operation):
         operation = self._initial_data(operation)
@@ -280,6 +287,14 @@ class OperationManager():
         if operation.data:
             ResponseUris.ResponseDict = operation.data
             logger.debug("Refreshed response uris.")
+
+            self._process_results = True
+            logger.debug("Enabling the processing of results.")
+
+        else:
+            logger.debug(
+                "Refresh response uris operation has empty data."
+            )
 
     def plugin_op(self, operation):
         self._plugins[operation.plugin].run_operation(operation)
@@ -420,7 +435,7 @@ class OperationManager():
         self.process_operation(operation)
 
     def send_results_callback(self, callback):
-        self._send_results = callback
+        self._send_results_callback = callback
 
     def _plugin_not_found(self, operation):
         """
@@ -438,26 +453,25 @@ class OperationManager():
             logger.error("Failed to save operation queue to file.")
             logger.exception(e)
 
-    def add_to_operation_queue(self, operation):
+    def add_to_operation_queue(self, operation, put_front=False):
         """
         Put the operation to file.
 
         Args:
-            operation - The actual operation.
-
-            no_duplicate - Will not put the operation in the queue if there
-                           already exists an operation of the same type in
-                           queue.
+            operation (SofOperation): A SofOperation instance to be processed.
+            put_front (bool): Whether to place in front of queue or not.
 
         Returns:
             (bool) True if able to put the operation in queue, False otherwise.
 
         """
 
-        #if no_duplicate:
-        #    return self._operation_queue.put_non_duplicate(operation)
-
-        return self._operation_queue.put(operation)
+        logger.debug(
+            "Adding ({0}, {1}) to operation queue. put_front: {2}".format(
+                operation.type, operation.id, put_front
+            )
+        )
+        return self._operation_queue.put(operation, put_front)
 
     def _operation_queue_loop(self):
 
@@ -499,14 +513,17 @@ class OperationManager():
 
             if should_send:
 
-                logger.debug("Results to be sent: {0}".format(should_send))
+                logger.debug(
+                    "Results to be sent: {0}".format(
+                        [(op.type, op) for op in should_send]
+                    )
+                )
 
                 for result_op in should_send:
-                    # TODO: what should be done if fails to remove?
                     self._result_queue.remove(result_op)
                     self.process_result_operation(result_op)
 
-                self._result_queue.done()
+                    self._result_queue.done()
 
             else:
                 #logger.debug(
@@ -517,15 +534,22 @@ class OperationManager():
     def process_result_operation(self, result_op):
         """ Attempts to send the results in the result queue. """
 
-        #operation = result_op.operation
+        if (result_op.type == OperationValue.NewAgent or
+            result_op.type == OperationValue.Startup):
+            # These operations do not rely on response_uris being set
+            # and therefore they don't rely on self._process_results
+            good_to_send = True
 
-        if result_op.should_be_sent():
+        else:
+            good_to_send = self._process_results
+
+        if result_op.should_be_sent() and good_to_send:
             # No raw_result means it hasn't been processed
             if (result_op.operation_result != settings.EmptyValue):
 
                 # Operation has been processed, send results to server
                 send_result = self._save_and_send_results(
-                    result_op.operation_type, result_op.operation_result
+                    result_op.type, result_op.operation_result
                 )
 
                 if (not send_result and result_op.retry):
@@ -538,28 +562,39 @@ class OperationManager():
                 logger.debug(("Operation has not been processed, or"
                               " unknown operation was received."))
         else:
+            if not good_to_send:
+                result_op.timeout()
+                logger.debug(
+                    ("Not processing operation ({0}, {1}) because "
+                     "response_uris have not been refreshed.")
+                    .format(result_op.type, result_op)
+                )
+
             self.add_to_result_queue(result_op)
 
     def add_to_result_queue(self, result_operation, retry=True):
         """
-        Adds an operation to the result queue which sends it off to the server.
+        Adds an operation to the result queue which is then sent off to
+        the server.
 
         Arguments:
+            result_operation (ResultOperation): An operation which must have an
+                operation type and raw_result attribute.
 
-        result_operation
-            An operation which must have an operation type and raw_result
-            attribute.
-
-        retry
-            Determines if the result queue should continue attempting to send
-            the operation to the server in case of a non 200 response.
-
+            retry (bool): Determines if the result queue should continue
+                attempting to send the operation to the server in case of a
+                non 200 response.
         """
 
         try:
             if not isinstance(result_operation, ResultOperation):
                 result_operation = ResultOperation(result_operation, retry)
 
+            logger.debug(
+                "Adding ({0}, {1}) to result queue.".format(
+                    result_operation.type, result_operation.id
+                )
+            )
             return self._result_queue.put(result_operation)
 
         except Exception as e:
@@ -576,7 +611,14 @@ class OperationManager():
 
                 try:
                     operation = SofOperation(json.dumps(op))
-                    self.add_to_operation_queue(operation)
+
+                    put_front = False
+                    if operation.type == OperationValue.RefreshResponseUris:
+                        put_front = True
+                    elif operation.type == OperationValue.NewAgentId:
+                        put_front = True
+
+                    self.add_to_operation_queue(operation, put_front)
 
                 except Exception as e:
                     logger.debug(

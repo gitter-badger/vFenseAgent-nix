@@ -47,7 +47,7 @@ class MainCore():
 
         operation_manager.send_results_callback(net_manager.send_message)
 
-        operation_manager.initial_data_sender()
+        operation_manager.start()
 
         for plugin in self.registered_plugins.values():
             plugin.start()

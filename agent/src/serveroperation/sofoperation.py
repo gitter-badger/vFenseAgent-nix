@@ -139,13 +139,15 @@ class SofOperation(object):
         self.raw_operation = message
 
     def is_savable(self):
-        non_savable = [OperationValue.Reboot, OperationValue.Shutdown,
-                       OperationValue.Startup, OperationValue.NewAgent]
+        non_savable = [
+            OperationValue.Reboot,
+            OperationValue.Shutdown,
+            OperationValue.Startup,
+            OperationValue.NewAgent,
+            OperationValue.RefreshResponseUris
+        ]
 
-        if self.type in non_savable:
-            return False
-
-        return True
+        return not (self.type in non_savable)
 
     def self_assigned_id(self):
         return str(uuid.uuid4()) + SelfGeneratedOpId
@@ -199,7 +201,7 @@ class ResultOperation():
         self.retry = retry
 
         #self.operation = operation
-        self.operation_type = operation.type
+        self.type = operation.type
         self.operation_result = operation.raw_result
 
         # Sets current time, no timeout
@@ -229,13 +231,20 @@ class ResultOperation():
         non_savable = [OperationValue.Startup, OperationValue.NewAgent]
 
         #if self.operation.type in non_savable:
-        if self.operation_type in non_savable:
+        if self.type in non_savable:
             return False
 
         return True
 
     def self_assigned_id(self):
         return str(uuid.uuid4()) + SelfGeneratedOpId
+
+    def to_dict(self):
+        return {
+            'operation_type': self.type,
+            'operation_result': self.operation_result,
+            'wait_until': self.wait_until
+        }
 
 
 class SofResult():
