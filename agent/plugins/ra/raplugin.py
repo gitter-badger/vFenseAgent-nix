@@ -161,13 +161,9 @@ class RaPlugin(AgentPlugin):
         logger.info('Done.')
         return operation
 
-    def initial_data(self, operation_type):
+    def initial_data(self):
         """
         Any initial data the server should have on first run.
-
-        Args:
-            operation_type - The type of operation determines what the plugin
-                             should return. Currently ignored for RAPlugin.
 
         Returns:
             (dict) Dictionary with initial RA plugin data.

@@ -80,12 +80,8 @@ class MonitorPlugin(AgentPlugin):
 
         self._send_results(operation, retry=False)
 
-    def initial_data(self, operation_type):
+    def initial_data(self):
         """Any initial data the server should have on first run.
-
-        Args:
-            operation_type - The type of operation determines what the plugin
-                             should return. Currently ignored for MonitPlugin.
 
         Returns:
             (dict) Dictionary with monitoring data.
@@ -166,7 +162,7 @@ class MonitorPlugin(AgentPlugin):
         if settings.AgentId:
             operation = MonitOperation()
             operation.type = MonitOperationValue.MonitorData
-            self._register_operation(operation.to_json())
+            self._register_operation(operation)
 
     def current_memory_data(self):
         """Gets the current memeory stats.

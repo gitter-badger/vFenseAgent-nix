@@ -63,17 +63,13 @@ class ResponseUris():
 
     # This dictionary is refreshed on a refresh response uri operation
     ResponseDict = {
-        OperationValue.NewAgent: {
-            OperationKey.ResponseUri: 'rvl/v1/core/newagent',
-            OperationKey.RequestMethod: RequestMethod.POST
-        },
-        OperationValue.Startup: {
-            OperationKey.ResponseUri: 'rvl/v1/{0}/core/startup',
-            OperationKey.RequestMethod: RequestMethod.PUT
-        },
         OperationValue.Login: {
             OperationKey.ResponseUri: 'rvl/login',
             OperationKey.RequestMethod: RequestMethod.POST
+        },
+        OperationValue.RefreshResponseUris: {
+            OperationKey.ResponseUri: 'rvl/v1/core/uris/response',
+            OperationKey.RequestMethod: RequestMethod.GET
         }
     }
 
@@ -83,17 +79,13 @@ class ResponseUris():
                        .get(operation_type, {}) \
                        .get(OperationKey.ResponseUri, '')
 
-        # TODO: remove once uris are placed in database
-        if operation_type == OperationValue.Startup:
-            return response_uri.format(settings.AgentId)
-
-        return response_uri
+        return response_uri.format(settings.AgentId)
 
     @staticmethod
     def get_request_method(operation_type):
         return ResponseUris.ResponseDict \
-            .get(operation_type, {}) \
-            .get(OperationKey.RequestMethod, '')
+               .get(operation_type, {}) \
+               .get(OperationKey.RequestMethod, '')
 
 
 SelfGeneratedOpId = '-agent'

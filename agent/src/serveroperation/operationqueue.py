@@ -4,8 +4,7 @@ from src.utils import logger
 
 
 class OperationQueue():
-    """ Simple queue specifically for server operations.
-    """
+    """Simple queue specifically for server operations."""
 
     def __init__(self):
 
@@ -19,9 +18,15 @@ class OperationQueue():
 
     def remove(self, operation):
         try:
+            logger.debug(
+                "Removing ({0}, {1}) from queue.".format(
+                    operation.type, operation.id
+                )
+            )
             self.queue.queue.remove(operation)
 
             return True
+
         except Exception as e:
             logger.error(
                 "Failed to remove operation from queue: {0}".format(operation)
@@ -120,9 +125,10 @@ class OperationQueue():
                 try:
                     logger.debug(
                         "Popping ({0}, {1}) from queue.".format(
-                            operation.id, operation.type
+                            operation.type, operation.id
                         )
                     )
+
                 except Exception:
                     logger.debug("Popping {0} from queue.".format(operation))
 

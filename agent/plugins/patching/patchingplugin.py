@@ -433,25 +433,14 @@ class PatchingPlugin(AgentPlugin):
             logger.error("Failure while sending agent update result.")
             logger.exception(e)
 
-    def initial_data(self, operation_type):
-        """
-        Retrieves current installed applications and available updates.
-
-        Args:
-            operation_type - The type of operation determines what the plugin
-                             should return.
+    def initial_data(self):
+        """Retrieves current installed applications and available updates.
 
         Returns:
             (dict) Dictionary contains all installed and available
             applications.
-
         """
         self._check_if_updated()
-
-        if operation_type == OperationValue.Startup:
-            self.run_refresh_apps_operation()
-
-            return None
 
         data = {
             'data': self.refresh_apps()
