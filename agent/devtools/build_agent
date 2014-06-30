@@ -19,65 +19,81 @@ BUILD_FILES = [
 ]
 INSTALL_SCRIPT = 'agent_utils'
 
-# No longer necessary as the install script can run on its own for
-# the oldest platform we support.
-#PLATFORM_SHEBANG = {
-#    'mac': '#!agent/deps/mac/Python-2.7.5/bin/python',
-#    #'deb' : '#!agent/deps/deb/Python-2.7.5/bin/python',
-#    'deb': '#!/usr/bin/python',
-#    'rpm': '#!agent/deps/rpm/Python-2.7.5/bin/python',
-#    'rpm6': '#!agent/deps/rpm6/Python-2.7.5/bin/python',
-#    'rpm-32': '#!agent/deps/rpm-32/Python-2.7.5/bin/python',
-#    'rpm6-32': '#!agent/deps/rpm6-32/Python-2.7.5/bin/python'
-#}
+# Patterns/files/directories to ignore when copying directories
+IGNORE_PATTERNS = ['*.pyc', '../plugins/ra', '../bin/vine-server']
+
 
 COMPILED_PYTHON_PATHS = {
-    'mac': 'agent/deps/mac/Python-2.7.5/',
-    #'deb': 'agent/deps/deb/Python-2.7.5/',
-    'rpm5_64': 'agent/deps/rpm/Python-2.7.5/',
-    'rpm6_64': 'agent/deps/rpm6/Python-2.7.5/',
-    'rpm5_32': 'agent/deps/rpm-32/Python-2.7.5/',
-    'rpm6_32': 'agent/deps/rpm6-32/Python-2.7.5/'
+    'mac': '../deps/mac/Python-2.7.5',
+    #'deb': '../deps/deb/Python-2.7.5',
+    'rpm5_64': '../deps/rpm/Python-2.7.5',
+    'rpm6_64': '../deps/rpm6/Python-2.7.5',
+    'rpm5_32': '../deps/rpm-32/Python-2.7.5',
+    'rpm6_32': '../deps/rpm6-32/Python-2.7.5'
 }
 
 
 def del_existing_dir(dir_name):
     if os.path.exists(dir_name):
         print 'Removing existing dir: {0}'.format(dir_name)
-
         shutil.rmtree(dir_name)
-
         print '{0} removed.'.format(dir_name)
+
+
+def ignore_unnecessary_pythons(platform):
+    for py_platform in COMPILED_PYTHON_PATHS:
+        if platform != py_platform:
+            IGNORE_PATTERNS.append(COMPILED_PYTHON_PATHS[py_platform])
+
+
+def ignore_files(dir_name, dir_contents):
+    ignore = []
+    for pattern in IGNORE_PATTERNS:
+        if '/' in pattern:
+            _dir = os.path.dirname(pattern)
+            _base_name = os.path.basename(pattern)
+
+            if _dir == dir_name:
+                ignore.extend(fnmatch.filter(dir_contents, _base_name))
+
+        else:
+            ignore.extend(fnmatch.filter(dir_contents, pattern))
+
+    if ignore:
+        print ignore
+
+    return set(ignore)
 
 
 def copy_dirs(dest):
     global BUILD_DIRS
 
-    for dir in BUILD_DIRS:
-        shutil.copytree(dir, os.path.join(dest, os.path.basename(dir)))
+    for b_dir in BUILD_DIRS:
+        shutil.copytree(
+            b_dir,
+            os.path.join(dest, os.path.basename(b_dir)),
+            ignore=ignore_files
+        )
+
+    remove_empty_dirs(dest)
+
+
+def remove_empty_dirs(search_dir):
+    for root, dirnames, _ in os.walk(search_dir):
+        full_root = os.path.join(search_dir, root)
+        for _dir in dirnames:
+            if len(os.listdir(os.path.join(root, _dir))) <= 0:
+                os.rmdir(os.path.join(root, _dir))
+
+        if len(os.listdir(root)) <= 0:
+            os.rmdir(root)
 
 
 def copy_files(dest):
     global BUILD_FILES
 
-    for file in BUILD_FILES:
-        shutil.copy(file, dest)
-
-
-def remove_compiled_pythons(agent_pkg_dir, platform):
-    global COMPILED_PYTHON_PATHS
-
-    for py_path in COMPILED_PYTHON_PATHS:
-        if platform != py_path:
-            shutil.rmtree(
-                os.path.join(agent_pkg_dir, COMPILED_PYTHON_PATHS[py_path])
-            )
-
-
-def remove_pyc_files(root_dir):
-    for root, dirnames, filenames in os.walk(root_dir):
-        for filename in fnmatch.filter(filenames, '*.pyc'):
-            os.remove(os.path.join(root, filename))
+    for _file in BUILD_FILES:
+        shutil.copy(_file, dest)
 
 
 def modify_config_version(config_path, version, platform):
@@ -164,19 +180,16 @@ def build(version, platform):
     agent_dir_path = os.path.join(agent_pkg_dir, 'agent')
     os.makedirs(agent_dir_path, 0755)
 
+    ignore_unnecessary_pythons(platform)
+
     print 'Copying needed directories.'
     copy_dirs(agent_dir_path)
+
     print 'Copying needed files.'
     copy_files(agent_dir_path)
 
     print 'Copying install script.'
     shutil.copy(INSTALL_SCRIPT, os.path.join(agent_pkg_dir, 'install'))
-
-    print 'Removing unnecessary compiled pythons.'
-    remove_compiled_pythons(agent_pkg_dir, platform)
-
-    print 'Removing all pyc files from build folder.'
-    remove_pyc_files(agent_dir_path)
 
     print 'Setting agent version.'
     modify_config_version(
