@@ -60,7 +60,9 @@ def ignore_files(dir_name, dir_contents):
             ignore.extend(fnmatch.filter(dir_contents, pattern))
 
     if ignore:
-        print ignore
+        print "Ignoring: {0}".format(
+            [os.path.join(dir_name, _file) for _file in ignore]
+        )
 
     return set(ignore)
 
