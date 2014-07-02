@@ -264,11 +264,11 @@ def update_config(args, new_agent_path):
 
     views = get_config_option(
         read_old_config, APP_SETTINGS_SECTION, 'views'
-    ).split(',')
+    )
 
     tags = get_config_option(
         read_old_config, APP_SETTINGS_SECTION, 'tags'
-    ).split(',')
+    )
 
     if args.agentid:
         agentid = args.agentid
