@@ -39,7 +39,8 @@ class OperationKey():
     Reboot = 'reboot'
     Rebooted = 'rebooted'
     VendorId = 'vendor_id'
-    CustomerName = 'customer_name'
+    Views = 'views'
+    Tags = 'tags'
     Message = 'message'
 
     Core = 'core'

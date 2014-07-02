@@ -34,18 +34,24 @@ PYTHON_BIN_EXE = os.path.join(AGENT_INSTALL_PATH, 'bin', 'python')
 
 SYSTEM_PYTHON_EXE = '/usr/bin/python'
 
-MAC_PYTHON_EXE = os.path.join(AGENT_INSTALL_PATH,
-                              'deps/mac/Python-2.7.5/bin/python')
-RPM_PYTHON_EXE = os.path.join(AGENT_INSTALL_PATH,
-                              'deps/rpm/Python-2.7.5/bin/python')
-RPM6_PYTHON_EXE = os.path.join(AGENT_INSTALL_PATH,
-                               'deps/rpm6/Python-2.7.5/bin/python')
-RPM_32_PYTHON_EXE = \
-    os.path.join(AGENT_INSTALL_PATH, 'deps/rpm-32/Python-2.7.5/bin/python')
-RPM6_32_PYTHON_EXE = \
-    os.path.join(AGENT_INSTALL_PATH, 'deps/rpm6-32/Python-2.7.5/bin/python')
-DEB_PYTHON_EXE = os.path.join(AGENT_INSTALL_PATH,
-                              'deps/deb/Python-2.7.5/bin/python')
+MAC_PYTHON_EXE = os.path.join(
+    AGENT_INSTALL_PATH, 'deps/mac/Python-2.7.5/bin/python'
+)
+RPM_PYTHON_EXE = os.path.join(
+    AGENT_INSTALL_PATH, 'deps/rpm/Python-2.7.5/bin/python'
+)
+RPM6_PYTHON_EXE = os.path.join(
+    AGENT_INSTALL_PATH, 'deps/rpm6/Python-2.7.5/bin/python'
+)
+RPM_32_PYTHON_EXE = os.path.join(
+    AGENT_INSTALL_PATH, 'deps/rpm-32/Python-2.7.5/bin/python'
+)
+RPM6_32_PYTHON_EXE = os.path.join(
+    AGENT_INSTALL_PATH, 'deps/rpm6-32/Python-2.7.5/bin/python'
+)
+DEB_PYTHON_EXE = os.path.join(
+    AGENT_INSTALL_PATH, 'deps/deb/Python-2.7.5/bin/python'
+)
 
 compiled_python_bit_types = {
     MAC_PYTHON_EXE: '64bit',
@@ -70,18 +76,21 @@ RPM_DISTROS = [
 DEBIAN_DISTROS = ['debian', 'ubuntu', 'linuxmint']
 
 # Defaults when option is not provided to this install script
-default_options = {'agentid': '',
-                   'nu': '',
-                   'wp': '',
-                   'serverhostname': '',
-                   'serveripaddress': '',
-                   'customer': 'default',
-                   'serverport': '443',
-                   'agentport': '9003',
-                   'starterport': '9005',
-                   'tunnelport': '22',
-                   'loglevel': 'debug',
-                   'uninstall_path': '/opt/vFense/'}
+default_options = {
+    'agentid': '',
+    'nu': '',
+    'wp': '',
+    'serverhostname': '',
+    'serveripaddress': '',
+    'views': 'default',
+    'tags': '',
+    'serverport': '443',
+    'agentport': '9003',
+    'starterport': '9005',
+    'tunnelport': '22',
+    'loglevel': 'debug',
+    'uninstall_path': '/opt/vFense/'
+}
 
 optional_dependencies = {
     'deb': [
@@ -123,13 +132,13 @@ def write_log(file_path, error):
     if not os.path.exists(log_dir):
         os.makedirs(log_dir)
 
-    f = open(file_path, 'a')
+    _file = open(file_path, 'a')
 
     try:
-        f.write("%s : %s" % (str(datetime.datetime.now()), str(error)))
-        f.write(os.linesep)
+        _file.write("%s : %s" % (str(datetime.datetime.now()), str(error)))
+        _file.write(os.linesep)
     finally:
-        f.close()
+        _file.close()
 
 
 def write_update_log(message):
@@ -174,7 +183,8 @@ def write_config(config_path, args):
     write_config.set(APP_SETTINGS_SECTION, 'agentport', args.agentport)
     write_config.set(APP_SETTINGS_SECTION, 'tunnelport', args.tunnelport)
     write_config.set(APP_SETTINGS_SECTION, 'loglevel', args.loglevel)
-    write_config.set(APP_SETTINGS_SECTION, 'customer', args.customer)
+    write_config.set(APP_SETTINGS_SECTION, 'views', args.views)
+    write_config.set(APP_SETTINGS_SECTION, 'tags', args.tags)
 
     write_config.add_section(AGENT_INFO_SECTION)
     write_config.set(AGENT_INFO_SECTION, 'name', AgentName)
@@ -182,12 +192,12 @@ def write_config(config_path, args):
     write_config.set(AGENT_INFO_SECTION, 'description', AgentDescription)
     write_config.set(AGENT_INFO_SECTION, 'installdate', get_date())
 
-    f = open(config_path, 'w')
+    _file = open(config_path, 'w')
 
     try:
-        write_config.write(f)
+        write_config.write(_file)
     finally:
-        f.close()
+        _file.close()
 
 
 def get_config_option(config_reader, section, option):
@@ -252,9 +262,13 @@ def update_config(args, new_agent_path):
         read_old_config, APP_SETTINGS_SECTION, 'loglevel'
     )
 
-    customer = get_config_option(
-        read_old_config, APP_SETTINGS_SECTION, 'customer'
-    )
+    views = get_config_option(
+        read_old_config, APP_SETTINGS_SECTION, 'views'
+    ).split(',')
+
+    tags = get_config_option(
+        read_old_config, APP_SETTINGS_SECTION, 'tags'
+    ).split(',')
 
     if args.agentid:
         agentid = args.agentid
@@ -286,8 +300,11 @@ def update_config(args, new_agent_path):
     if args.loglevel:
         loglevel = args.loglevel
 
-    if args.customer:
-        customer = args.customer
+    if args.views:
+        views = args.views
+
+    if args.tags:
+        tags = args.tags
 
     # Grab the agentInfo of the new config
     new_config = os.path.join(new_agent_path, 'agent.config')
@@ -310,7 +327,8 @@ def update_config(args, new_agent_path):
     write_config.set(APP_SETTINGS_SECTION, 'tunnelport', tunnelport)
     write_config.set(APP_SETTINGS_SECTION, 'agentport', agentport)
     write_config.set(APP_SETTINGS_SECTION, 'loglevel', loglevel)
-    write_config.set(APP_SETTINGS_SECTION, 'customer', customer)
+    write_config.set(APP_SETTINGS_SECTION, 'views', views)
+    write_config.set(APP_SETTINGS_SECTION, 'tags', tags)
 
     write_config.add_section(AGENT_INFO_SECTION)
     write_config.set(AGENT_INFO_SECTION, 'name', name)
@@ -340,8 +358,7 @@ def delete_directory(path):
 
 
 def dict_to_json(dictionary):
-    """
-    Basic dictionary to JSON converter. Does not check types, turns
+    """Basic dictionary to JSON converter. Does not check types, turns
     everything into a string on json.
     """
     json = []
@@ -349,9 +366,7 @@ def dict_to_json(dictionary):
     json.append("{")
 
     for k in dictionary:
-        json.append('"' + k + '"')
-        json.append(':')
-        json.append('"' + dictionary[k] + '"')
+        json.append('"%s" : "%s"' % (str(k), str(dictionary[k])))
         json.append(',')
 
     # Change the last comma to a closing brace
@@ -1363,74 +1378,141 @@ def get_input():
     """
     parser = OptionParser()
 
-    parser.add_option("-u", "--username", dest="username",
-                      default=default_options['nu'], help="This is required.")
-    parser.add_option("-p", "--password", dest="password",
-                      default=default_options['wp'], help="This is required.")
     parser.add_option(
-        "-s", "--serverhostname", default=default_options['serverhostname'],
+        "-u",
+        "--username",
+        dest="username",
+        default=default_options['nu'],
+        help="This is required."
+    )
+    parser.add_option(
+        "-p",
+        "--password",
+        dest="password",
+        default=default_options['wp'],
+        help="This is required."
+    )
+    parser.add_option(
+        "-s",
+        "--serverhostname",
+        default=default_options['serverhostname'],
         dest="serverhostname",
         help=("Please provide server hostname and/or server ip address."
               " Only one required.")
     )
     parser.add_option(
-        "-i", "--serveripaddress", default=default_options['serveripaddress'],
+        "-i",
+        "--serveripaddress",
+        default=default_options['serveripaddress'],
         dest="serveripaddress",
         help=("Please provide server ip address and/or server hostname."
               " Only one required.")
     )
-    parser.add_option("-c", "--customer", default=default_options['customer'],
-                      dest="customer", help="Default: default.")
-    parser.add_option("--serverport", default=default_options['serverport'],
-                      dest="serverport", help="Default: 443.")
-    parser.add_option("--agentport", default=default_options['agentport'],
-                      dest="agentport", help="Default: 9003.")
-    parser.add_option("--starterport", default=default_options['starterport'],
-                      dest="starterport", help="Default: 9005.")
-    parser.add_option("--tunnelport", default=default_options['tunnelport'],
-                      dest="tunnelport", help="Default: 22.")
-    parser.add_option("--loglevel", default=default_options['loglevel'],
-                      dest="loglevel", help="Default: debug.")
+    parser.add_option(
+        "--views",
+        default=default_options['views'],
+        dest="views",
+        help=("The views you want this agent attached to. These views "
+              "must already exist on the server.")
+    )
+    parser.add_option(
+        "--tags",
+        default=default_options['tags'],
+        dest="tags",
+        help=("The tags you want this agent to be associated with. These tags "
+              "must already exist on the server.")
+    )
+    parser.add_option(
+        "--serverport",
+        default=default_options['serverport'],
+        dest="serverport",
+        help="Default: 443."
+    )
+    parser.add_option(
+        "--agentport",
+        default=default_options['agentport'],
+        dest="agentport",
+        help="Default: 9003."
+    )
+    parser.add_option(
+        "--starterport",
+        default=default_options['starterport'],
+        dest="starterport",
+        help="Default: 9005."
+    )
+    parser.add_option(
+        "--tunnelport",
+        default=default_options['tunnelport'],
+        dest="tunnelport",
+        help="Default: 22."
+    )
+    parser.add_option(
+        "--loglevel",
+        default=default_options['loglevel'],
+        dest="loglevel",
+        help="Default: debug."
+    )
 
-    parser.add_option("--no-verify", action="store_true", default=False,
-                      dest="no_verify", help="Do not verify credentials.")
+    parser.add_option(
+        "--no-verify",
+        action="store_true",
+        default=False,
+        dest="no_verify",
+        help="Do not verify credentials."
+    )
 
     # If called, provide it with the path to the old agent
-    parser.add_option("--update", default="", dest="update_path",
-                      help=("Should only be used to flag an update. "
-                            "Current agent path must be provided."))
+    parser.add_option(
+        "--update",
+        default="",
+        dest="update_path",
+        help=("Should only be used to flag an update. "
+              "Current agent path must be provided.")
+    )
+
     parser.add_option("--agentid", default="", dest="agentid")
     parser.add_option("--operationid", default="", dest="operationid")
     parser.add_option("--appid", default="", dest="appid")
-    parser.add_option("--workingdir", default="", dest="workingdir",
-                      help="Use to specify the path to the parent directory of"
-                           " the agent application to install.")
+
+    parser.add_option(
+        "--workingdir",
+        default="",
+        dest="workingdir",
+        help=("Use to specify the path to the parent directory of "
+              "the agent application to install.")
+    )
 
     # Must specify type in order to send value to callback
-    parser.add_option("--uninstall", default="", action="callback",
-                      dest="uninstall_path", callback=uninstall_op_callback,
-                      help="Uninstall the agent. Provide path to agent if the "
-                           "agent was not installed in the default directory.")
+    parser.add_option(
+        "--uninstall",
+        default="",
+        action="callback",
+        dest="uninstall_path",
+        callback=uninstall_op_callback,
+        help=("Uninstall the agent. Provide path to agent if the "
+              "agent was not installed in the default directory.")
+    )
 
     return parser.parse_args()
 
 if __name__ == '__main__':
     args = get_input()[0]
-    utils = get_platform_utils()
+    write_config('agent_config', args)
+    #utils = get_platform_utils()
 
-    if args.workingdir:
-        CURRENT_DIR = args.workingdir
+    #if args.workingdir:
+    #    CURRENT_DIR = args.workingdir
 
-    if args.uninstall_path:
-        check_privilege()
-        utils.uninstall(args)
-    elif args.update_path:
-        check_privilege()
-        check_bit_type()
-        utils.update(args)
-    elif args.username or args.password:
-        check_privilege()
-        check_bit_type()
-        utils.install(args)
-    else:
-        printErrors(["Incorrect usage of script, please use -h for help."])
+    #if args.uninstall_path:
+    #    check_privilege()
+    #    utils.uninstall(args)
+    #elif args.update_path:
+    #    check_privilege()
+    #    check_bit_type()
+    #    utils.update(args)
+    #elif args.username or args.password:
+    #    check_privilege()
+    #    check_bit_type()
+    #    utils.install(args)
+    #else:
+    #    printErrors(["Incorrect usage of script, please use -h for help."])

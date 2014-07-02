@@ -64,7 +64,8 @@ AgentId = None
 LogLevel = None
 Username = None
 Password = None
-Customer = None
+Views = None
+Tags = None
 
 
 def _get_server_addresses():
@@ -138,7 +139,8 @@ def initialize(appName=None):
     global _logger
     global Username
     global Password
-    global Customer
+    global Views
+    global Tags
 
     _create_directories()
 
@@ -151,7 +153,8 @@ def initialize(appName=None):
     AgentId = _config.get(_app_settings_section, 'agentid')
     Username = _config.get(_app_settings_section, 'nu')
     Password = _config.get(_app_settings_section, 'wp')
-    Customer = _config.get(_app_settings_section, 'customer')
+    Views = _config.get(_app_settings_section, 'views').split(',')
+    Tags = _config.get(_app_settings_section, 'tags').split(',')
 
     AgentName = _config.get(_agent_info_section, 'name')
     AgentVersion = _config.get(_agent_info_section, 'version')
@@ -176,9 +179,8 @@ def save_settings():
     @return: Nothing
     """
 
-    # TODO: should be tested before used.
-
-    _config.set(_app_settings_section, 'customer', Customer)
+    _config.set(_app_settings_section, 'tags', Tags)
+    _config.set(_app_settings_section, 'views', Views)
     _config.set(_app_settings_section, 'loglevel', LogLevel)
     _config.set(_app_settings_section, 'agentport', AgentPort)
     _config.set(_app_settings_section, 'serverport', ServerPort)
@@ -193,5 +195,5 @@ def save_settings():
     _config.set(_agent_info_section, 'description', AgentDescription)
     _config.set(_agent_info_section, 'installdate', AgentInstallDate)
 
-    with open(_app_config_file, 'w') as f:
-        _config.write(f)
+    with open(_app_config_file, 'w') as _file:
+        _config.write(_file)

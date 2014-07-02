@@ -385,7 +385,10 @@ class OperationManager():
         root = {}
         root[OperationKey.Operation] = operation.type
         root[OperationKey.Rebooted] = self._is_boot_up()
-        root[OperationKey.CustomerName] = settings.Customer
+
+        # TODO: verify with server whether it is expecting this
+        root[OperationKey.Views] = settings.Views
+        root[OperationKey.Tags] = settings.Tags
 
         root[OperationKey.OperationId] = operation.id
         root[OperationKey.AgentId] = settings.AgentId
@@ -638,7 +641,7 @@ class OperationManager():
             result_op.timeout()
             logger.debug(
                 ("Not processing operation ({0}, {1}) because "
-                 "response_uris have not been refreshed and/or no agent id has"
+                 "response_uris have not been refreshed and/or no agent id has "
                  "been set.")
                 .format(result_op.type, result_op)
             )
