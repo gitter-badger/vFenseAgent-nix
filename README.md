@@ -1,5 +1,5 @@
-vFenseAgent-nix
+vFenseAgent-nix - The Mac and Linux vFense agent.
 ===========
 
-The Mac and Linux vFense agent. Visit us at <a href="http://www.vfense.org">vFense.org</a> for
-more information on us, our product, and documentation.
+* <a href="https://github.com/vFense/vFenseAgent-nix/wiki/Installing-the-vFense-Agents">Installing the vFense-nix agent</a>
+* <a href="https://github.com/vFense/vFenseAgent-nix/wiki/Managing-the-agents">Managing the agent</a>
