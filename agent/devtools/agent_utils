@@ -82,7 +82,7 @@ default_options = {
     'wp': '',
     'serverhostname': '',
     'serveripaddress': '',
-    'views': 'default',
+    'views': '',
     'tags': '',
     'serverport': '443',
     'agentport': '9003',
