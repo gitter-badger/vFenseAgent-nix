@@ -1,0 +1,27 @@
+
+Roadmap for v0.8.0
+==================
+[x] Agent should get initial response uris before doing anything else
+    - This serves a couple of purposes:
+        1. Agent no longer hardcodes any of the response uris, except for the
+           response uri API. Thus making the response uris dynamic.
+        2. The agent continues trying to get the response uris from the server
+           after a failure, with pauses in-between, before doing anything else.
+           This makes sure that the agent doesn't waste any cycles if the server
+           is down or the agent has a bad connection.
+    [x] Agent should not process any results before getting the initial response
+        uris, otherwise the agent doesn't know where to respond to with the
+        results.
+
+[ ] Change authentication/communication with the server
+    - Every message to the server should have the authentication token placed in the
+      headers of the message, following the format denoted at:
+      https://github.com/vFense/vFense/wiki/Agent-communications.
+        -- Due to this, the agent is no longer required to login to the server
+           before sending any messages, because each message contains the
+           authentication.
+    [ ] Change the agent.config, installer, and config loader/saver functions to 
+        take into account this new change.
+
+[ ] Implement operation ttl's
+[ ] Add proxy settings to agent
