@@ -78,8 +78,7 @@ DEBIAN_DISTROS = ['debian', 'ubuntu', 'linuxmint']
 # Defaults when option is not provided to this install script
 default_options = {
     'agentid': '',
-    'nu': '',
-    'wp': '',
+    'token': '',
     'serverhostname': '',
     'serveripaddress': '',
     'views': '',
@@ -171,8 +170,7 @@ def write_config(config_path, args):
 
     write_config.add_section(APP_SETTINGS_SECTION)
     write_config.set(APP_SETTINGS_SECTION, 'agentid', args.agentid)
-    write_config.set(APP_SETTINGS_SECTION, 'nu', args.username)
-    write_config.set(APP_SETTINGS_SECTION, 'wp', args.password)
+    write_config.set(APP_SETTINGS_SECTION, 'token', args.token)
     write_config.set(
         APP_SETTINGS_SECTION, 'serverhostname', args.serverhostname
     )
@@ -226,12 +224,8 @@ def update_config(args, new_agent_path):
         read_old_config, APP_SETTINGS_SECTION, 'agentid'
     )
 
-    username = get_config_option(
-        read_old_config, APP_SETTINGS_SECTION, 'nu'
-    )
-
-    password = get_config_option(
-        read_old_config, APP_SETTINGS_SECTION, 'wp'
+    token = get_config_option(
+        read_old_config, APP_SETTINGS_SECTION, 'token'
     )
 
     serverhostname = get_config_option(
@@ -273,11 +267,8 @@ def update_config(args, new_agent_path):
     if args.agentid:
         agentid = args.agentid
 
-    if args.username:
-        username = args.username
-
-    if args.password:
-        password = args.password
+    if args.token:
+        token = args.token
 
     if args.serverhostname:
         serverhostname = args.serverhostname
@@ -318,8 +309,7 @@ def update_config(args, new_agent_path):
     write_config = ConfigParser.SafeConfigParser()
     write_config.add_section(APP_SETTINGS_SECTION)
     write_config.set(APP_SETTINGS_SECTION, 'agentid', agentid)
-    write_config.set(APP_SETTINGS_SECTION, 'nu', username)
-    write_config.set(APP_SETTINGS_SECTION, 'wp', password)
+    write_config.set(APP_SETTINGS_SECTION, 'token', token)
     write_config.set(APP_SETTINGS_SECTION, 'serverhostname', serverhostname)
     write_config.set(APP_SETTINGS_SECTION, 'serveripaddress', serveripaddress)
     write_config.set(APP_SETTINGS_SECTION, 'serverport', serverport)
@@ -385,12 +375,12 @@ def write_operation_success(app_id, operation_id, success, path):
 
     write_update_log(json)
 
-    f = open(path, 'w')
+    _file = open(path, 'w')
 
     try:
-        f.write(json)
+        _file.write(json)
     finally:
-        f.close()
+        _file.close()
 
 
 def printErrors(errors):
@@ -402,34 +392,34 @@ def printErrors(errors):
     sys.exit(1)
 
 
-def verify_credentials(username, password, server_address, server_port):
+def verify_credentials(token, server_address, server_port):
     """
     Returns message corresponding to error code, if any. If an unknown error
     occured, it will pass the exception. Returns empty string on a 200.
     """
-    url = "https://%s:%s/rvl/login" % (server_address, server_port)
-
-    data = {
-        'name': username,
-        'password': password
-    }
-
-    data_json = dict_to_json(data)
+    # TODO: Change to proper uri once the verification API has been finished
+    url = "https://%s:%s/rvl/v2/core/uris/response" % (
+        server_address, server_port
+    )
 
     req = urllib2.Request(
-        url, data_json, {'Content-Type': 'application/json'}
+        url,
+        headers={
+            'Content-Type': 'application/json',
+            'Authentication': {'token': token}
+        }
     )
 
     try:
         # Stop attempting to open url after 15 seconds
         socket.setdefaulttimeout(15)
 
-        f = urllib2.urlopen(req)
-        f.close()
+        response = urllib2.urlopen(req)
+        response.close()
 
     except urllib2.HTTPError, e:
         known_errors = {
-            403: "Invalid username and/or password",
+            403: "Invalid token",
             500: "500 Internal server error",
             502: "502 Bad gateway"
         }
@@ -438,6 +428,7 @@ def verify_credentials(username, password, server_address, server_port):
             return known_errors[e.code]
         else:
             return str(e)
+
     except urllib2.URLError, e:
         if isinstance(e[0], socket.gaierror):
             return "Unknown server address: \"%s\"" % server_address
@@ -447,6 +438,7 @@ def verify_credentials(username, password, server_address, server_port):
             return "Failed to reach: \"%s\"" % server_address
         else:
             return str(e)
+
     except Exception, e:
         return str(e)
 
@@ -459,11 +451,8 @@ def check_user_input(args):
 
     errors = []
 
-    if not args.username or not args.password:
-        errors.append(
-            ("Please provide both username and password to -u and -p, "
-             "respectively")
-        )
+    if not args.token:
+        errors.append("Please provide a token to the option '-t', ")
 
     if not args.serverhostname and not args.serveripaddress:
         errors.append(
@@ -480,7 +469,7 @@ def check_user_input(args):
         server_address = args.serveripaddress
 
     cred_err = verify_credentials(
-        args.username, args.password, server_address, args.serverport
+        args.token, server_address, args.serverport
     )
 
     # Terminate on invalid credentials
@@ -1379,18 +1368,12 @@ def get_input():
     parser = OptionParser()
 
     parser.add_option(
-        "-u",
-        "--username",
-        dest="username",
-        default=default_options['nu'],
-        help="This is required."
-    )
-    parser.add_option(
-        "-p",
-        "--password",
-        dest="password",
-        default=default_options['wp'],
-        help="This is required."
+        "-t",
+        "--token",
+        dest="token",
+        default=default_options['token'],
+        help=("To install the agent this is required. Please check server "
+              "documentation on how to retrieve a token.")
     )
     parser.add_option(
         "-s",
@@ -1497,22 +1480,21 @@ def get_input():
 
 if __name__ == '__main__':
     args = get_input()[0]
-    write_config('agent_config', args)
-    #utils = get_platform_utils()
+    utils = get_platform_utils()
 
-    #if args.workingdir:
-    #    CURRENT_DIR = args.workingdir
+    if args.workingdir:
+        CURRENT_DIR = args.workingdir
 
-    #if args.uninstall_path:
-    #    check_privilege()
-    #    utils.uninstall(args)
-    #elif args.update_path:
-    #    check_privilege()
-    #    check_bit_type()
-    #    utils.update(args)
-    #elif args.username or args.password:
-    #    check_privilege()
-    #    check_bit_type()
-    #    utils.install(args)
-    #else:
-    #    printErrors(["Incorrect usage of script, please use -h for help."])
+    if args.uninstall_path:
+        check_privilege()
+        utils.uninstall(args)
+    elif args.update_path:
+        check_privilege()
+        check_bit_type()
+        utils.update(args)
+    elif args.token:
+        check_privilege()
+        check_bit_type()
+        utils.install(args)
+    else:
+        printErrors(["Incorrect usage of script, please use -h for help."])
