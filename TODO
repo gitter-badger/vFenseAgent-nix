@@ -16,12 +16,30 @@ Roadmap for v0.8.0
 [ ] Change authentication/communication with the server
     - Every message to the server should have the authentication token placed in the
       headers of the message, following the format denoted at:
-      https://github.com/vFense/vFense/wiki/Agent-communications.
+      "https://github.com/vFense/vFense/wiki/Agent-communications"
         -- Due to this, the agent is no longer required to login to the server
            before sending any messages, because each message contains the
-           authentication.
+           authentication token.
     [ ] Change the agent.config, installer, and config loader/saver functions to 
         take into account this new change.
+        [ ] Change the uri used to verify token, during installation, once the
+            proper API has been created.
+        [ ] Change the documentation to reflect the new options when installing.
+
+[ ] Replace all traces of Customer with Views in agent
+    - Add the Views to the JSON sent on a New Agent operation.
+    - Server expects Views to be a list of Views (str). The list should be empty
+      when no views have been specified.
+
+[ ] Add Tags to the agent
+    - Add the Tags to the JSON sent on a New Agent operation.
+    - Server is expecting Tags to be a list of Tags (str). The list should be empty
+      when no tags have specified.
 
 [ ] Implement operation ttl's
+    [ ] server_queue_ttl should be checked before placing operation in queue
+    [ ] agent_queue_ttl should be checked before processing an operation and
+        while it's processing as well.
+
+[ ] Retrieve url used to check for agent update from server
 [ ] Add proxy settings to agent

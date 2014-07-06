@@ -28,6 +28,8 @@ class NetManager():
 
         self._timer = RepeatTimer(seconds_to_checkin, self._agent_checkin)
 
+        self.http_session = requests.session()
+
     def start(self):
         """Starts the repeating timer that checks-in to the server at the
         set interval.
@@ -123,49 +125,6 @@ class NetManager():
             .format(req_method)
         )
 
-    def login(self):
-        """Logs in to the vFense server with the required credentials using
-        a requests session which stores all cookies."""
-
-        try:
-            response_uri = self._get_response_uri(OperationValue.Login)
-
-            url = os.path.join(self._server_url, response_uri)
-
-            logger.debug("Logging into: {0}".format(url))
-
-            self.http_session = requests.session()
-
-            headers = {'content-type': 'application/json'}
-            payload = {
-                'name': settings.Username,
-                'password': settings.Password
-            }
-
-            request_method = self._get_callable_request_method(
-                RequestMethod.POST
-            )
-
-            response = request_method(
-                url,
-                data=json.dumps(payload),
-                headers=headers,
-                verify=False,
-                timeout=30
-            )
-
-            logger.debug("Login status code: %s " % response.status_code)
-            logger.debug("Login server text: %s " % response.text)
-
-            if response.status_code == 200:
-                return True
-
-        except Exception as e:
-            logger.error("Agent was unable to login.")
-            logger.exception(e)
-
-        return False
-
     def send_message(self, data, uri, req_method):
         """Sends a message to the server and waits for data in return.
 
@@ -183,8 +142,10 @@ class NetManager():
         logger.debug('Sending message to server')
 
         url = os.path.join(self._server_url, uri)
-        headers = {'content-type': 'application/json'}
-        payload = data
+        headers = {
+            'Content-Type': 'application/json',
+            'Authentication': {'token': settings.Token}
+        }
 
         sent = False
         received_data = {}
@@ -192,14 +153,11 @@ class NetManager():
         logger.debug("Sending message to: {0}".format(url))
 
         try:
-            if not self.login():
-                raise Exception("Agent was unable to log in to the server.")
-
             request_method = self._get_callable_request_method(req_method)
 
             response = request_method(
                 url,
-                data=payload,
+                data=data,
                 headers=headers,
                 verify=False,
                 timeout=30

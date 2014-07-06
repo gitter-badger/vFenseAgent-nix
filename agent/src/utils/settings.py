@@ -62,8 +62,7 @@ ServerPort = None
 AgentPort = None
 AgentId = None
 LogLevel = None
-Username = None
-Password = None
+Token = None
 Views = None
 Tags = None
 
@@ -137,8 +136,7 @@ def initialize(appName=None):
     global AgentId
     global LogLevel
     global _logger
-    global Username
-    global Password
+    global Token
     global Views
     global Tags
 
@@ -151,8 +149,7 @@ def initialize(appName=None):
     AgentPort = int(_config.get(_app_settings_section, 'agentport'))
     LogLevel = _config.get(_app_settings_section, 'loglevel')
     AgentId = _config.get(_app_settings_section, 'agentid')
-    Username = _config.get(_app_settings_section, 'nu')
-    Password = _config.get(_app_settings_section, 'wp')
+    Token = _config.get(_app_settings_section, 'token')
     Views = _config.get(_app_settings_section, 'views').split(',')
     Tags = _config.get(_app_settings_section, 'tags').split(',')
 
@@ -186,9 +183,8 @@ def save_settings():
     _config.set(_app_settings_section, 'serverport', ServerPort)
     _config.set(_app_settings_section, 'serveripaddress', ServerIpAddress)
     _config.set(_app_settings_section, 'serverhostname', ServerHostname)
+    _config.set(_app_settings_section, 'token', Token)
     _config.set(_app_settings_section, 'agentid', AgentId)
-    _config.set(_app_settings_section, 'nu', Username)
-    _config.set(_app_settings_section, 'wp', Password)
 
     _config.set(_agent_info_section, 'name', AgentName)
     _config.set(_agent_info_section, 'version', AgentVersion)

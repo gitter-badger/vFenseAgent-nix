@@ -80,27 +80,58 @@ class OperationManager():
         """
         self._send_message = callback
 
-    # Quick hack to be able to get the response uris before doing anything else
-    def get_response_uris_operation(self):
-        _, server_response = self._send_message(
-            {},
-            ResponseUris.get_response_uri(OperationValue.RefreshResponseUris),
-            ResponseUris.get_request_method(OperationValue.RefreshResponseUris)
+    def _get_initial_response_uris(self):
+        """Gets the initial response uris from the server before attempting
+        to do anything else. The response uris tell the agent where to
+        send any results/messages to the server depending on the operation
+        types.
+        """
+        wait_time = 20
+
+        response_uri = ResponseUris.get_response_uri(
+            OperationValue.RefreshResponseUris
+        )
+        request_method = ResponseUris.get_request_method(
+            OperationValue.RefreshResponseUris
         )
 
-        try:
-            operation = SofOperation(json.dumps(server_response))
-
-        except Exception as err:
-            logger.error(
-                "Could not create an operation from refresh_response_uris "
-                "API call's result."
+        while True:
+            logger.debug("Attempting to get initial response uris.")
+            sent, server_response = self._send_message(
+                {}, response_uri, request_method
             )
-            logger.exception(err)
 
-            operation = None
+            try:
+                # TODO(uncomment)
+                #if not sent:
+                #    raise Exception(
+                #        "Failed to send message to server for initial resposne "
+                #        "uris."
+                #    )
 
-        return operation
+                operation = self.process_message(server_response)[0]
+
+                if operation.type == OperationValue.RefreshResponseUris:
+                    logger.debug("Retrieved initial response uris.")
+                    self.refresh_response_uris(operation)
+
+                    break
+
+                else:
+                    logger.error(
+                        "Receiving incorrect operation from server after call "
+                        "to refresh_response_uris API."
+                    )
+
+            except Exception as err:
+                logger.error("Failed to retrieve initial response uris.")
+                logger.exception(err)
+
+            logger.debug(
+                "Attempting to retrieve initial response uris again in "
+                "{0} seconds".format(wait_time)
+            )
+            time.sleep(20)
 
     def _setup_queue_loops(self):
         logger.debug("Setting up the queue loop threads.")
@@ -115,28 +146,9 @@ class OperationManager():
         self._result_queue_thread.start()
 
     def start(self):
-        # First get all response_uris
-        retrieved_response_uris = False
-        while not retrieved_response_uris:
-            logger.debug("Attempting to get initial response uris.")
-            operation = self.get_response_uris_operation()
-
-            if operation:
-                logger.debug("Retrieved initial response uris.")
-                self.refresh_response_uris(operation)
-
-                retrieved_response_uris = True
-
-            else:
-                wait_time = 10
-                logger.error(
-                    "Failed to retrieve initial response uris. Trying again in "
-                    "{0} seconds.".format(wait_time)
-                )
-                time.sleep(wait_time)
-
+        # Initial response uris must be retrieved before anything else
+        self._get_initial_response_uris()
         self.initial_data_sender()
-
         self._setup_queue_loops()
 
     def register_plugin_operation(self, operation, put_front=False):
@@ -681,7 +693,7 @@ class OperationManager():
         operation_list = []
 
         if message:
-            for op in message.get(OperationKey.Data, []):
+            for op in message.get(OperationKey.Operations, []):
                 try:
                     operation = SofOperation(json.dumps(op))
                     operation_list.append(operation)

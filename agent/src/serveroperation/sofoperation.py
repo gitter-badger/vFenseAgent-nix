@@ -30,6 +30,7 @@ class OperationValue():
 class OperationKey():
 
     Operation = 'operation'
+    Operations = 'operations'
     OperationId = 'operation_id'
     Plugin = 'plugin'
     Data = 'data'
@@ -64,12 +65,8 @@ class ResponseUris():
 
     # This dictionary is refreshed on a refresh response uri operation
     ResponseDict = {
-        OperationValue.Login: {
-            OperationKey.ResponseUri: 'rvl/login',
-            OperationKey.RequestMethod: RequestMethod.POST
-        },
         OperationValue.RefreshResponseUris: {
-            OperationKey.ResponseUri: 'rvl/v1/core/uris/response',
+            OperationKey.ResponseUri: 'rvl/v2/core/uris/response',
             OperationKey.RequestMethod: RequestMethod.GET
         }
     }

@@ -1375,22 +1375,25 @@ def get_input():
         help=("To install the agent this is required. Please check server "
               "documentation on how to retrieve a token.")
     )
+
     parser.add_option(
         "-s",
         "--serverhostname",
         default=default_options['serverhostname'],
         dest="serverhostname",
-        help=("Please provide server hostname and/or server ip address."
-              " Only one required.")
+        help=("Please provide server hostname and/or server ip address. "
+              "Only one required.")
     )
+
     parser.add_option(
         "-i",
         "--serveripaddress",
         default=default_options['serveripaddress'],
         dest="serveripaddress",
-        help=("Please provide server ip address and/or server hostname."
-              " Only one required.")
+        help=("Please provide server ip address and/or server hostname. "
+              "Only one required.")
     )
+
     parser.add_option(
         "--views",
         default=default_options['views'],
@@ -1398,6 +1401,7 @@ def get_input():
         help=("The views you want this agent attached to. These views "
               "must already exist on the server.")
     )
+
     parser.add_option(
         "--tags",
         default=default_options['tags'],
@@ -1405,30 +1409,35 @@ def get_input():
         help=("The tags you want this agent to be associated with. These tags "
               "must already exist on the server.")
     )
+
     parser.add_option(
         "--serverport",
         default=default_options['serverport'],
         dest="serverport",
         help="Default: 443."
     )
+
     parser.add_option(
         "--agentport",
         default=default_options['agentport'],
         dest="agentport",
         help="Default: 9003."
     )
+
     parser.add_option(
         "--starterport",
         default=default_options['starterport'],
         dest="starterport",
         help="Default: 9005."
     )
+
     parser.add_option(
         "--tunnelport",
         default=default_options['tunnelport'],
         dest="tunnelport",
         help="Default: 22."
     )
+
     parser.add_option(
         "--loglevel",
         default=default_options['loglevel'],
@@ -1478,6 +1487,7 @@ def get_input():
 
     return parser.parse_args()
 
+
 if __name__ == '__main__':
     args = get_input()[0]
     utils = get_platform_utils()
@@ -1488,13 +1498,16 @@ if __name__ == '__main__':
     if args.uninstall_path:
         check_privilege()
         utils.uninstall(args)
+
     elif args.update_path:
         check_privilege()
         check_bit_type()
         utils.update(args)
+
     elif args.token:
         check_privilege()
         check_bit_type()
         utils.install(args)
+
     else:
         printErrors(["Incorrect usage of script, please use -h for help."])
