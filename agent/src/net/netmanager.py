@@ -28,8 +28,6 @@ class NetManager():
 
         self._timer = RepeatTimer(seconds_to_checkin, self._agent_checkin)
 
-        self.http_session = requests.session()
-
     def start(self):
         """Starts the repeating timer that checks-in to the server at the
         set interval.
@@ -114,11 +112,11 @@ class NetManager():
             method found.
         """
         if req_method.upper() == RequestMethod.POST:
-            return self.http_session.post
+            return requests.post
         if req_method.upper() == RequestMethod.PUT:
-            return self.http_session.put
+            return requests.put
         if req_method.upper() == RequestMethod.GET:
-            return self.http_session.get
+            return requests.get
 
         raise Exception(
             "Could not get request method for {0}"

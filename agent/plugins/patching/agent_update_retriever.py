@@ -57,7 +57,7 @@ class AgentUpdateRetriever():
 
         # TODO: don't hardcode
         releases_api = \
-            'https://api.github.com/repos/toppatch/vFenseAgent-nix/releases'
+            'https://api.github.com/repos/vfense/vFenseAgent-nix/releases'
 
         try:
             response = urllib2.urlopen(releases_api)
