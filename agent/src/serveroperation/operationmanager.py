@@ -102,12 +102,11 @@ class OperationManager():
             )
 
             try:
-                # TODO(uncomment)
-                #if not sent:
-                #    raise Exception(
-                #        "Failed to send message to server for initial resposne "
-                #        "uris."
-                #    )
+                if not sent:
+                    raise Exception(
+                        "Failed to send message to server for initial response "
+                        "uris."
+                    )
 
                 operation = self.process_message(server_response)[0]
 
@@ -730,8 +729,7 @@ class OperationManager():
             'version': systeminfo.get_version(),
             'bit_type': systeminfo.get_bit_type(),
             'computer_name': systeminfo.get_computer_name(),
-            'machine_type': systeminfo.MachineType().get_machine_type(),
-            'host_name': ''  # TODO: Implement
+            'machine_type': systeminfo.MachineType().get_machine_type()
         }
 
         logger.debug(

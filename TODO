@@ -24,7 +24,7 @@ Roadmap for v0.8.0
         take into account this new change.
         [ ] Change the uri used to verify token, during installation, once the
             proper API has been created.
-        [ ] Change the documentation to reflect the new options when installing.
+        [ ] Change the install documentation to reflect the new options when installing.
 
 [ ] Replace all traces of Customer with Views in agent
     - Add the Views to the JSON sent on a New Agent operation.
@@ -41,5 +41,5 @@ Roadmap for v0.8.0
     [ ] agent_queue_ttl should be checked before processing an operation and
         while it's processing as well.
 
-[ ] Retrieve url used to check for agent update from server
+[ ] Retrieve url used to check for agent update from server instead of hardcoding
 [ ] Add proxy settings to agent

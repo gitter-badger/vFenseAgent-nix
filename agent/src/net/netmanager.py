@@ -71,7 +71,7 @@ class NetManager():
     def _agent_checkin(self):
         """Checks in to the server to retrieve all pending operations."""
 
-        if allow_checkin:
+        if allow_checkin and settings.AgentId:
             root = {
                 OperationKey.Operation: OperationValue.CheckIn,
                 OperationKey.OperationId: '',
@@ -97,7 +97,7 @@ class NetManager():
                 )
 
         else:
-            logger.info("Checkin set to false.")
+            logger.info("Checkin set to false, or no agent id.")
 
     def _get_callable_request_method(self, req_method):
         """Use to get the appropriate request method to talk to the server.
