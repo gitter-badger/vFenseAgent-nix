@@ -63,8 +63,8 @@ AgentPort = None
 AgentId = None
 LogLevel = None
 Token = None
-Views = None
-Tags = None
+Views = []
+Tags = []
 
 
 def _get_server_addresses():
@@ -122,12 +122,13 @@ def initialize(appName=None):
 
     @return: Nothing
     """
+    global _config
+
     global AgentName
     global AgentVersion
     global AgentDescription
     global AgentInstallDate
 
-    global _config
     global ServerAddress
     global ServerHostname
     global ServerIpAddress
@@ -135,7 +136,6 @@ def initialize(appName=None):
     global AgentPort
     global AgentId
     global LogLevel
-    global _logger
     global Token
     global Views
     global Tags
@@ -150,8 +150,17 @@ def initialize(appName=None):
     LogLevel = _config.get(_app_settings_section, 'loglevel')
     AgentId = _config.get(_app_settings_section, 'agentid')
     Token = _config.get(_app_settings_section, 'token')
-    Views = _config.get(_app_settings_section, 'views').split(',')
-    Tags = _config.get(_app_settings_section, 'tags').split(',')
+
+    # If what was loaded is just an empty strings then leave the default
+    # values for Views and Tags (empty list) so that it is sent that way
+    # to the server.
+    loaded_views = _config.get(_app_settings_section, 'views')
+    if loaded_views:
+        Views = loaded_views.split(',')
+
+    loaded_tags = _config.get(_app_settings_section, 'tags')
+    if loaded_tags:
+        Tags = loaded_tags.split(',')
 
     AgentName = _config.get(_agent_info_section, 'name')
     AgentVersion = _config.get(_agent_info_section, 'version')
@@ -172,12 +181,14 @@ def initialize(appName=None):
 
 
 def save_settings():
-    """ Saves the settings to the agent config file.
-    @return: Nothing
-    """
+    """Saves the settings to the agent config file."""
 
-    _config.set(_app_settings_section, 'tags', Tags)
-    _config.set(_app_settings_section, 'views', Views)
+    # Lists are strings with commas delimiting the elements in INI files
+    tags = ','.join(Tags)
+    views = ','.join(Views)
+
+    _config.set(_app_settings_section, 'tags', tags)
+    _config.set(_app_settings_section, 'views', views)
     _config.set(_app_settings_section, 'loglevel', LogLevel)
     _config.set(_app_settings_section, 'agentport', AgentPort)
     _config.set(_app_settings_section, 'serverport', ServerPort)

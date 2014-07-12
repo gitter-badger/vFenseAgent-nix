@@ -50,7 +50,7 @@ class OperationQueue():
         new_queue.put(operation)
 
         for op in self.queue_dump():
-            new_queue.put(operation)
+            new_queue.put(op)
 
         # +1 to take in to account the newest operation added to the front
         new_queue.unfinished_tasks = self.queue.unfinished_tasks + 1
