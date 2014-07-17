@@ -29,9 +29,10 @@ class OperationManager():
         # reponse_uris operation.
         self._refreshed_response_uris = False
 
-        # Callback function for results set by core
+        # Callback function for sending results. Set by the agent core.
         self._send_results_callback = None
-        # Callback allowing to get the response from the server immediately
+        # Callback function allowing to get the response from the server
+        # immediately
         self._send_message = None
 
     def _load_plugin_handlers(self):

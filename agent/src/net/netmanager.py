@@ -93,7 +93,8 @@ class NetManager():
 
             if not success:
                 logger.error(
-                    "Could not check-in to server. See logs for details."
+                    "Could not check-in to server; received a non-200 status "
+                    "code. Check all server and agent logs for more details."
                 )
 
         else:
@@ -129,15 +130,13 @@ class NetManager():
         Args:
             data (str): JSON formatted str to send the server.
             uri (str): RESTful uri to send the data.
-            req_method (str): HTTP Request Method
+            req_method (str): HTTP Request Method.
 
         Returns:
-            (bool, dict) A tuple that contains the success from sending the
+            (bool, dict) A 2-tuple that contains the success from sending the
             message (False if received non-200), and a dictionary containing
-            the response from the server
+            the response from the server.
         """
-
-        logger.debug('Sending message to server')
 
         url = os.path.join(self._server_url, uri)
         headers = {
@@ -145,10 +144,14 @@ class NetManager():
             'Authentication': {'token': settings.Token}
         }
 
+        if settings.AgentId:
+            headers['Authentication']['agent_id'] = settings.AgentId
+
         sent = False
         received_data = {}
 
         logger.debug("Sending message to: {0}".format(url))
+        logger.debug("Message being sent: {0}".format(data))
 
         try:
             request_method = self._get_callable_request_method(req_method)
@@ -161,7 +164,6 @@ class NetManager():
                 timeout=30
             )
 
-            logger.debug("Url: %s " % url)
             logger.debug("Status code: %s " % response.status_code)
             logger.debug("Server text: %s " % response.text)
 
