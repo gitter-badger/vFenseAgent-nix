@@ -20,7 +20,7 @@ class PatchingOperationValue():
     UninstallAgent = 'uninstall_agent'
     UpdatesAvailable = 'updates_available'
     ApplicationsInstalled = 'applications_installed'
-    RefreshApps = 'updatesapplications'
+    RefreshApps = 'refresh_apps'
     AvailableAgentUpdate = 'available_agent_update'
 
     # TODO: implement
