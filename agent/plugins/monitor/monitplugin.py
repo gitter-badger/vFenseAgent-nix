@@ -132,9 +132,10 @@ class MonitorPlugin(AgentPlugin):
     def _get_cpu_data(self):
         cpu = self.current_cpu_data()
 
-        cpu['idle'] = float(cpu['idle'])
-        cpu['user'] = float(cpu['user'])
-        cpu['system'] = float(cpu['system'])
+        cpu['idle'] = cpu['idle']
+        cpu['user'] = cpu['user']
+        cpu['system'] = cpu['system']
+        cpu['total'] = cpu['total']
 
         return cpu
 
@@ -276,21 +277,27 @@ class MonitorPlugin(AgentPlugin):
             current_user = long(cpu_numbers[0]) + long(cpu_numbers[1])
             current_sys = long(cpu_numbers[2])
             current_idle = long(cpu_numbers[3])
+            current_iowait = long(cpu_numbers[4])
 
             user = current_user - self._previous_user_cpu
             sys = current_sys - self._previous_sys_cpu
             idle = current_idle - self._previous_idle_cpu
+            iowait = current_iowait - self._previous_iowait_cpu
+            total = user + sys
 
             self._previous_total_cpu = current_total
             self._previous_user_cpu = current_user
             self._previous_sys_cpu = current_sys
             self._previous_idle_cpu = current_idle
+            self._previous_iowait_cpu = current_iowait
 
             stats = {
                 MonitKey.User: self.calculate_percentage(total, user),
                 MonitKey.System: self.calculate_percentage(total, sys),
+                MonitKey.IOWait: self.calculate_percentage(total, iowait),
                 MonitKey.Idle: self.calculate_percentage(total, idle)
             }
+            stats[MonitKey.Total] = stats[MonitKey.User] + stats[MonitKey.User]
 
         except Exception as e:
 
@@ -301,6 +308,7 @@ class MonitorPlugin(AgentPlugin):
 
                 MonitKey.User: 0,
                 MonitKey.System: 0,
+                MonitKey.Total: 0,
                 MonitKey.Idle: 0
             }
 
@@ -430,7 +438,7 @@ class MonitorPlugin(AgentPlugin):
 
         try:
 
-            return str(round(100 * float(diff) / float(total), 2))
+            return round(100 * float(diff) / float(total), 2)
 
         except Exception as e:
 

@@ -21,7 +21,9 @@ class MonitKey(OperationKey):
     FileSystem = 'file_system'
     User = 'user'
     System = 'system'
+    Total = 'total'
     Idle = 'idle'
+    IOWait =' iowait'
     Name = 'name'
     Mount = 'mount'
 
@@ -47,6 +49,8 @@ class MonitOperation(SofOperation):
         self.cpu = {
             MonitKey.User: 0,
             MonitKey.System: 0,
+            MonitKey.Total: 0,
+            MonitKey.IOWait: 0,
             MonitKey.Idle: 0
         }
 
