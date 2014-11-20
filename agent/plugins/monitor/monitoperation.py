@@ -23,7 +23,7 @@ class MonitKey(OperationKey):
     System = 'system'
     Total = 'total'
     Idle = 'idle'
-    IOWait =' iowait'
+    IOWait = 'iowait'
     Name = 'name'
     Mount = 'mount'
 

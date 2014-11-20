@@ -20,6 +20,7 @@ class MonitorPlugin(AgentPlugin):
         self._previous_sys_cpu = 0
         self._previous_idle_cpu = 0
         self._previous_total_cpu = 0
+        self._previous_iowait_cpu = 0
 
         if systeminfo.get_os_code() == systeminfo.OSCode.Mac:
 
@@ -131,11 +132,11 @@ class MonitorPlugin(AgentPlugin):
 
     def _get_cpu_data(self):
         cpu = self.current_cpu_data()
-
         cpu['idle'] = cpu['idle']
         cpu['user'] = cpu['user']
         cpu['system'] = cpu['system']
         cpu['total'] = cpu['total']
+        cpu['iowait'] = cpu['iowait']
 
         return cpu
 
@@ -309,6 +310,7 @@ class MonitorPlugin(AgentPlugin):
                 MonitKey.User: 0,
                 MonitKey.System: 0,
                 MonitKey.Total: 0,
+                MonitKey.IOWait: 0,
                 MonitKey.Idle: 0
             }
 
