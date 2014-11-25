@@ -1,6 +1,7 @@
 import shutil
 import os
 import platform
+import re
 import glob
 import json
 import urllib2
@@ -42,12 +43,14 @@ class PatchingPlugin(AgentPlugin):
             return MacOpHandler()
 
         elif plat == 'linux':
-            distro = platform.linux_distribution()[0].lower()
+            distro = re.sub(r'"', '', platform.linux_distribution()[0].lower())
 
             # List to check RedHat derived distros that use yum.
             _redhat = 'red hat enterprise linux server'
             _rpm_distros = ['fedora', 'centos', 'centos linux']
-            _debian_distros = ['debian', 'ubuntu', 'linuxmint']
+            _debian_distros = [
+                'debian', 'ubuntu', 'linuxmint', 'elementary os'
+            ]
 
             if distro == _redhat:
                 from operationhandler.rhelhandler import RhelOpHandler
