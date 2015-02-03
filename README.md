@@ -1,6 +1,8 @@
 vFenseAgent-nix
 ===========
 
+[![Join the chat at https://gitter.im/vFense/vFenseAgent-nix](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/vFense/vFenseAgent-nix?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 The vFenseAgent-nix repository pertains to the **Mac** and **Linux** vFense agent.
 
 #### Download
